@@ -39,7 +39,7 @@ auto generate_primes()
 // * means correct in the right place
 // ^ means correct in the wrong place
 // . means wrong
-std::string which_digits_correct(unsigned number, unsigned guess)
+std::string check_which_digits_correct(unsigned number, unsigned guess)
 {
 	auto ns = std::format("{:0>5}", (number));
 	auto gs = std::format("{:0>5}", (guess));
@@ -75,21 +75,23 @@ std::string which_digits_correct(unsigned number, unsigned guess)
 }
 
 #include <cassert>
-void properties()
+void check_properties()
 {
-	auto got = which_digits_correct(12345, 23451);
+	auto got = check_which_digits_correct(12347, 11779);
+	assert(got == "*.^..");
+	got = check_which_digits_correct(12345, 23451);
 	assert(got=="^^^^^");
-	got = which_digits_correct(12345, 12345);
+	got = check_which_digits_correct(12345, 12345);
 	assert(got == "*****");
-	got = which_digits_correct(48533, 12345);
+	got = check_which_digits_correct(48533, 12345);
 	assert(got == "..^^^");
-	got = which_digits_correct(98041, 41141);
+	got = check_which_digits_correct(98041, 41141);
 	assert(got == "...**");
 	assert(is_prime(17231));
-	got = which_digits_correct(1723, 17231);
+	got = check_which_digits_correct(1723, 17231);
 	assert(got == "^^^^.");
 	unsigned number = 78737;
-	got = which_digits_correct(number, 87739);
+	got = check_which_digits_correct(number, 87739);
 	assert(got == "^^**.");
 
 }
@@ -102,7 +104,7 @@ unsigned input() // how to signal stopping? - exceptions v a pair
 	{
 		std::cin.clear();
 		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-		std::cout << "Please enter a number.\n";
+		std::cout << "Please enter a number.\n>";
 	}
 	return number;
 }
@@ -133,14 +135,26 @@ unsigned some_number()
 	return dist(mt);
 }
 
-template<typename fn>
-void guess_any_number(unsigned number, fn message)
+void guess_a_number(unsigned number)
 {
-	std::cout << "Guess the number.\n";
+	std::cout << "Guess the number.\n>";
 	unsigned guess;
 	while ((guess = input()) && guess != number)
 	{
-		std::cout << guess << " is wrong. Try again\n";
+		std::cout << guess << " is wrong. Try again\n>";
+	}
+	std::cout << "Well done.";
+}
+
+
+template<typename fn>
+void guess_number_with_clues(unsigned number, fn message)
+{
+	std::cout << "Guess the number.\n>";
+	unsigned guess;
+	while ((guess = input()) && guess != number)
+	{
+		std::cout << guess << " is wrong. Try again\n>";
 		std::cout << message(number, guess);
 	}
 	std::cout << "Well done.";
@@ -150,10 +164,7 @@ template<typename fn>
 void guess_any_number_or_give_up(unsigned number, fn message)
 {
 	std::cout << "Guess the number.\n";
-	std::optional<unsigned> guess; //could use pait<T, bool> instead, but...
-	//https://en.cppreference.com/w/cpp/utility/optional
-	//When an object of type optional<T> is contextually converted to bool, 
-	//the conversion returns true if the object contains a value and false if it does not contain a value.
+	std::optional<unsigned> guess;
 	while (guess = read_number(std::cin)) // drops out of loop if no value
 	{
 		if (guess.value() == number)
@@ -161,7 +172,7 @@ void guess_any_number_or_give_up(unsigned number, fn message)
 			std::cout << "Well done.";
 			return;
 		}
-		std::cout << guess.value() << " is wrong. Try again\n"; // TODO send in output stream?
+		std::cout << guess.value() << " is wrong. Try again\n>";
 		std::cout << message(number, guess.value()); 
 	}
 	std::cout << std::format("The number was {:0>5}\n", (number));
@@ -184,9 +195,13 @@ int some_prime_number()
 
 int main()
 {
-	properties();
-	// Guess any number:
-	// guess_any_number(some_number(), [](int number, int guess) { return std::format("Your guess was too {}\n", (guess < number ? "small" : "big")); });
+	check_properties();
+
+	// guess anumber without a clue
+	guess_a_number(some_number());
+
+	// Guess any number with a clue:
+	guess_number_with_clues(some_number(), [](int number, int guess) { return std::format("Your guess was too {}\n", (guess < number ? "small" : "big")); });
 
 	// Guess a prime number:
 	auto primes = generate_primes();
@@ -194,7 +209,7 @@ int main()
 			bool prime = primes.contains(guess);
 			return std::format("{}\n{}\n",
 				prime?"Prime":"Not prime", // maybe just say not prime, if not prime... also test length of number
-				which_digits_correct(number, guess));
+				check_which_digits_correct(number, guess));
 		}
 	);
 }

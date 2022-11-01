@@ -29,12 +29,16 @@ auto get_next_row(const std::vector<int> & last_row)
 
 auto generate_triangle(int rows)
 {
-    std::vector<int> data;
-    std::vector<std::vector<int>> triangle;
+    //Commented out code copies
+    //std::vector<int> data;
+    //std::vector<std::vector<int>> triangle;
+    std::vector<std::vector<int>> triangle{ {1} };
     for (int row = 0; row < rows; ++row)
     {
-        data = get_next_row(data);
-        triangle.push_back(data);
+        //data = get_next_row(data);
+        //triangle.push_back(data);
+        //This does perfect forwarding
+        triangle.emplace_back(get_next_row(triangle.back()));
     }
     return triangle;
 }
@@ -100,7 +104,7 @@ constexpr bool is_palindrome(const std::vector<int>& v)
 
 // Some tests, using assert
 // fails for a 36 row triangle - think about why
-void properties(const std::vector<std::vector<int>> & triangle)
+void check_properties(const std::vector<std::vector<int>> & triangle)
 {
     int expected_total = 1;
     int row_number = 1;
@@ -151,7 +155,7 @@ int main()
     auto triangle = generate_triangle(16); //Change 16 if you want
 
     // test triangle is correct
-    properties(triangle);
+    check_properties(triangle);
 
     // display left justified
     std::cout << triangle;
