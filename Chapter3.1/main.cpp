@@ -1,7 +1,7 @@
 #include <iostream>
 #include <format>
+#include <optional>
 #include <random>
-
 #include <unordered_set>
 #include <ranges>
 #include <string>
@@ -97,7 +97,7 @@ void check_properties()
 }
 
 
-unsigned input() // how to signal stopping? - exceptions v a pair
+unsigned input()
 {
 	unsigned number; //try a negative number!
 	while (!(std::cin >> number))
@@ -110,7 +110,6 @@ unsigned input() // how to signal stopping? - exceptions v a pair
 }
 
 // Allow a way to give up
-#include <optional>
 std::optional<unsigned> read_number(std::istream& in)
 {
 	unsigned result{};
@@ -119,7 +118,6 @@ std::optional<unsigned> read_number(std::istream& in)
 	}
 	return {}; // what if negative? or too big
 }
-//also getline: https://stackoverflow.com/questions/7868936/read-file-line-by-line-using-ifstream-in-c
 
 unsigned some_const_number()
 {
@@ -155,7 +153,7 @@ void guess_number_or_give_up(int number)
 	{
 		if (guess.value() == number)
 		{
-			std::cout << "Well done.";
+			std::cout << "Well done.\n";
 			return;
 		}
 		std::cout << std::format("{} is wrong. Try again\n>",
@@ -164,9 +162,11 @@ void guess_number_or_give_up(int number)
 	std::cout << std::format("The number was {}\n", number);
 }
 
+//#include <concepts>
+//void guess_number_with_clues(unsigned number, std::invocable<int, int> auto message)
+// .. more in the next chapter...
 
-template<typename fn>
-void guess_number_with_clues(unsigned number, fn message)
+void guess_number_with_clues(unsigned number, std::invocable<int, int> auto message)
 {
 	std::cout << "Guess the number.\n>";
 	std::optional<int> guess;
@@ -192,7 +192,7 @@ void guess_any_number_or_give_up(unsigned number, fn message)
 	{
 		if (guess.value() == number)
 		{
-			std::cout << "Well done.";
+			std::cout << "Well done.\n";
 			return;
 		}
 		std::cout << guess.value() << " is wrong. Try again\n>";
@@ -221,13 +221,14 @@ int main()
 	check_properties();
 
 	// guess a number without a clue
-	//guess_number(some_const_number());
+	guess_number(some_const_number());
 
-	//guess_number_or_give_up(some_const_number());
+	// alow a non-number to indicate defeat
+	guess_number_or_give_up(some_const_number());
 
 	// Guess any number with a clue:
 	guess_number_with_clues(some_const_number(), [](int number, int guess) { return std::format("Your guess was too {}\n", (guess < number ? "small" : "big")); });
-	return 0;
+
 	// Guess a prime number:
 	auto primes = generate_primes();
 	guess_any_number_or_give_up(some_prime_number(), [&primes](int number, int guess) {
