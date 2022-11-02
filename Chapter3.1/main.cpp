@@ -135,15 +135,33 @@ unsigned some_number()
 	return dist(mt);
 }
 
-void guess_a_number(unsigned number)
+void guess_number(unsigned number)
 {
 	std::cout << "Guess the number.\n>";
-	unsigned guess;
-	while ((guess = input()) && guess != number)
+	unsigned guess = input();
+	while (guess != number)
 	{
 		std::cout << guess << " is wrong. Try again\n>";
+		guess = input();
 	}
-	std::cout << "Well done.";
+	std::cout << "Well done.\n";
+}
+
+void guess_number_or_give_up(int number)
+{
+	std::cout << "Guess the number.\n>";
+	std::optional<int> guess;
+	while (guess = read_number(std::cin))
+	{
+		if (guess.value() == number)
+		{
+			std::cout << "Well done.";
+			return;
+		}
+		std::cout << std::format("{} is wrong. Try again\n>",
+								guess.value());
+	}
+	std::cout << std::format("The number was {}\n", number);
 }
 
 
@@ -151,13 +169,18 @@ template<typename fn>
 void guess_number_with_clues(unsigned number, fn message)
 {
 	std::cout << "Guess the number.\n>";
-	unsigned guess;
-	while ((guess = input()) && guess != number)
+	std::optional<int> guess;
+	while (guess = read_number(std::cin))
 	{
-		std::cout << guess << " is wrong. Try again\n>";
-		std::cout << message(number, guess);
+		if (guess.value() == number)
+		{
+			std::cout << "Well done.";
+			return;
+		}
+		std::cout << message(number, guess.value());
+		std::cout << '>';
 	}
-	std::cout << "Well done.";
+	std::cout << std::format("The number was {}\n", number);
 }
 
 template<typename fn>
@@ -197,12 +220,14 @@ int main()
 {
 	check_properties();
 
-	// guess anumber without a clue
-	guess_a_number(some_number());
+	// guess a number without a clue
+	//guess_number(some_const_number());
+
+	//guess_number_or_give_up(some_const_number());
 
 	// Guess any number with a clue:
-	guess_number_with_clues(some_number(), [](int number, int guess) { return std::format("Your guess was too {}\n", (guess < number ? "small" : "big")); });
-
+	guess_number_with_clues(some_const_number(), [](int number, int guess) { return std::format("Your guess was too {}\n", (guess < number ? "small" : "big")); });
+	return 0;
 	// Guess a prime number:
 	auto primes = generate_primes();
 	guess_any_number_or_give_up(some_prime_number(), [&primes](int number, int guess) {
