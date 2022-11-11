@@ -124,7 +124,7 @@ unsigned some_const_number()
 	return 42;
 }
 
-unsigned some_number()
+unsigned some_random_number()
 {
 	std::random_device rd; // hard to test! also, only called once, but in general more likely to be called more often...
 	std::mt19937 mt(rd());
@@ -174,7 +174,7 @@ void guess_number_with_clues(unsigned number, std::invocable<int, int> auto mess
 	{
 		if (guess.value() == number)
 		{
-			std::cout << "Well done.";
+			std::cout << "Well done.\n";
 			return;
 		}
 		std::cout << message(number, guess.value());
@@ -227,7 +227,7 @@ int main()
 	guess_number_or_give_up(some_const_number());
 
 	// Guess any number with a clue:
-	guess_number_with_clues(some_const_number(), [](int number, int guess) { return std::format("Your guess was too {}\n", (guess < number ? "small" : "big")); });
+	guess_number_with_clues(some_random_number(), [](int number, int guess) { return std::format("Your guess was too {}\n", (guess < number ? "small" : "big")); });
 
 	// Guess a prime number:
 	auto primes = generate_primes();
