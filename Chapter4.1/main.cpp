@@ -13,8 +13,14 @@ void duration_to_end_of_year()
             std::chrono::day(31)
         );
     auto event = std::chrono::sys_days(new_years_eve);
-        std::chrono::duration dur = event - now;
-        std::cout << dur << " until event\n";
+    // Recall sys_days is sys_time<days>
+    // and sys_time<days> is 
+        //template <class _Duration>
+        //using sys_time = time_point<system_clock, _Duration>;
+        // so this amounts to
+    //auto event = std::chrono::time_point<std::chrono::system_clock, std::chrono::days>(new_years_eve);
+    std::chrono::duration dur = event - now;
+    std::cout << dur << " until event\n";
 }
 
 //Listing 4.3 Use duration to move to a coarser representation
@@ -126,7 +132,7 @@ void check_properties()
 std::optional<std::chrono::year_month_day> read_date(std::istream & in)
 {
     using namespace std::string_literals;
-    auto format_str = "%Y-%m-%d"s;
+    auto format_str = "%Y-%m-%d";
     std::chrono::year_month_day date;
     if (in >> std::chrono::parse(format_str, date))
     {
@@ -164,12 +170,25 @@ countdown_in_local_time(std::chrono::system_clock::time_point now,
 
 int main()
 {
+    //Listing 4.2
     duration_to_end_of_year();
+
+    //Listing 4.3
     durations();
+
+    //Listing 4.4
     defining_a_duration();
+
+    //Listing 4.5
+    requirements_and_concepts();
+
+    //Listing 4.6
     countdown();
 
+    //Listing 4.7
     std::cout << countdown(std::chrono::system_clock::now()) << " until event \n"; // calling listing 4.7
+
+    //Listing 4.8
     check_properties();
 
     //Listing 4.9 Call the countdown in a loop
