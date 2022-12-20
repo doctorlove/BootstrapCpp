@@ -1,21 +1,16 @@
 #include <iostream>
 #include <vector>
 
-void triangle()
+void generate_triangle()
 {
-	auto data = std::vector{ 1 };
-	for (const auto& number : data)
-	{
-		std::cout << number << ' ';
-	}
-
-	for (auto p = data.begin(); p!=data.end(); ++p)
-	{
-		std::cout << *p << ' ';
-	}
+    std::vector<int> data{ 1 };
+    for (auto number : data)
+    {
+        std::cout << number << ' ';
+    }
 }
 
 int main()
 {
-	triangle();
+    generate_triangle();
 }
