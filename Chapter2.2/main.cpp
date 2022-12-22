@@ -10,16 +10,18 @@
 #include <vector>
 
 // In Visual Studio add /std:c++latest to 'properties | C++ | command line | additon options' to get the CTAD, ranges etc
+// Or at least C++17 for --std in g++ (CTAD has been around since C++17)
 
-auto get_next_row(const std::vector<int> & last_row)
+//Listing 2.2 The next row of Pascal’s triangle using the previous row
+std::vector<int> get_next_row(const std::vector<int>& last_row)
 {
-    std::vector ret{ 1 };
+    std::vector ret{ 1 }; // CTAD - otherwise say std::vector<int>
     if (last_row.empty())
     {
         return ret;
     }
 
-    for (unsigned idx = 0; idx+1 < last_row.size(); ++idx)
+    for (size_t idx = 0; idx+1 < last_row.size(); ++idx)
     {
         ret.emplace_back(last_row[idx] + last_row[idx + 1]);
     }
@@ -27,37 +29,31 @@ auto get_next_row(const std::vector<int> & last_row)
     return ret;
 }
 
-auto generate_triangle(int rows)
+//Listing 2.3 Generating several rows of Pascal’s triangle
+auto generate_triangle_first_listing(int rows)
 {
-    //Commented out code copies
-    //std::vector<int> data;
-    //std::vector<std::vector<int>> triangle;
-    std::vector<std::vector<int>> triangle{ {1} };
+    std::vector<int> data;
+    std::vector<std::vector<int>> triangle;
     for (int row = 0; row < rows; ++row)
     {
-        //data = get_next_row(data);
-        //triangle.push_back(data);
-        //This does perfect forwarding
+        data = get_next_row(data);
+        triangle.push_back(data);
+    }
+    return triangle;
+}
+
+//Listing 2.4 Moving a temporary
+auto generate_triangle(int rows)
+{
+    std::vector<std::vector<int>> triangle{ {1} };
+    for (int row = 1; row < rows; ++row)
+    {
         triangle.emplace_back(get_next_row(triangle.back()));
     }
     return triangle;
 }
 
-
-template<typename T>
-void show_triangle(const T& triangle)
-{
-    std::string space(triangle.back().size()/2, ' ');
-    for (const auto row : triangle)
-    {
-        for (const auto data : row)
-        {
-            std::cout << data << space;
-        }
-        std::cout << '\n';
-    }
-}
-
+//Listing 2.5 Sending the contents to a stream
 template<typename T>
 std::ostream& operator << (std::ostream & s, 
     const std::vector<std::vector<T>>& v)
@@ -70,11 +66,28 @@ std::ostream& operator << (std::ostream & s,
     return s;
 }
 
-// This code is slightly more general than the text of the book
+// Listing 2.7 Center justified output
+void show_vectors(std::ostream& s,
+    const std::vector<std::vector<int>>& v)
+{
+    std::string spaces(v.back().size() * 3, ' ');
+    for (const auto& row : v)
+    {
+        s << spaces;
+        if (spaces.size() > 3)
+            spaces.resize(spaces.size() - 3);
+        for (const auto& data : row)
+        {
+            s << std::format("{: ^{}}", data, 6);
+        }
+        s << '\n';
+    }
+}
+// This code is slightly more general than the text of the book, shown above
 //  since it takes a width of 6, allowing you to try more rows
 //  Recall, 6 is fine for 16 or so rows. 
 //  Once the entries are more than 4 digits the will overlap
-void show_vectors(std::ostream& s,
+void show_vectors_more_general(std::ostream& s,
     const std::vector<std::vector<int>>& v, size_t width = 6)
 {
     const auto gaps  = width/2;
@@ -150,6 +163,7 @@ void show_view(std::ostream& s,
 }
 
 
+//Pulls together all the listing gradually added to main through the text
 int main()
 {
     auto triangle = generate_triangle(16); //Change 16 if you want
@@ -160,10 +174,13 @@ int main()
     // display left justified
     std::cout << triangle;
 
+    show_vectors(std::cout, triangle);
+
     // Rather than sticking with a block of 6, we can find out how much we need
+    // for example if we have more rows
     auto biggest = std::max_element(triangle.back().begin(), triangle.back().end());
     auto width = std::to_string(*biggest);
-    show_vectors(std::cout, triangle, width.size()+2);
+    show_vectors_more_general(std::cout, triangle, width.size()+2);
 
     // Show odd numbers as stars
     show_view(std::cout, triangle);
