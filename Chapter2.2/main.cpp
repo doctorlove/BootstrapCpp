@@ -56,11 +56,13 @@ auto generate_triangle(int rows)
 //Listing 2.5 Sending the contents to a stream
 template<typename T>
 std::ostream& operator << (std::ostream & s, 
-    const std::vector<std::vector<T>>& v)
+    const std::vector<std::vector<T>>& triangle)
 {
-    for (const auto& data : v)
+    for (const auto& row : triangle)
     {
-        std::ranges::copy(data, std::ostream_iterator<T>(s, " "));
+        std::ranges::copy(row, std::ostream_iterator<T>(s, " "));
+        // If your compile doesn't support ranges, use std::copy instead:
+        //std::copy(row.begin(), row.end(), std::ostream_iterator<T>(s, " "));
         s << '\n';
     }
     return s;
@@ -70,7 +72,8 @@ std::ostream& operator << (std::ostream & s,
 void show_vectors(std::ostream& s,
     const std::vector<std::vector<int>>& v)
 {
-    std::string spaces(v.back().size() * 3, ' ');
+    size_t final_row_size = v.back().size();
+    std::string spaces(final_row_size * 3, ' ');
     for (const auto& row : v)
     {
         s << spaces;
@@ -120,7 +123,7 @@ constexpr bool is_palindrome(const std::vector<int>& v)
 void check_properties(const std::vector<std::vector<int>> & triangle)
 {
     int expected_total = 1;
-    int row_number = 1;
+    size_t row_number = 1;
     for (const auto & row : triangle)
     {
         assert(row.front() == 1);

@@ -13,7 +13,7 @@ auto simple_plus(T lhs, U rhs) -> decltype(lhs + rhs)
 auto main() -> int {
     std::cout << "Hello, world!\n";
     std::plus<int> adder;
-    std::cout << adder(1, 1.23) << '\n';
+    std::cout << adder(1, 1.23) << '\n'; // you possibly get a warning because adder is created to add ints
     std::cout << std::plus<>{}(1, 1.23) << '\n';
     std::cout << simple_plus(1, 1.23) << '\n';
 
