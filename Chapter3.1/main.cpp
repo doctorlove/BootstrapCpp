@@ -1,10 +1,11 @@
-#include <iostream>
 #include <format>
+#include <iostream>
 #include <optional>
 #include <random>
-#include <unordered_set>
 #include <ranges>
+#include <sstream>
 #include <string>
+#include <unordered_set>
 
 
 constexpr bool is_prime(int n)
@@ -59,15 +60,14 @@ std::string check_which_digits_correct(unsigned number, unsigned guess)
 	{
 		char guess_char = gs[i];
 		if (i < ns.length() && guess_char != ns[i] && matches[i] != '^' && matches[i] != '*')
+		//if (i < ns.length() && matches[i] != '*') a reviewer suggested this is better
 		{
-			// string.find cf npos - the horror or C++23 https://en.cppreference.com/w/cpp/string/basic_string/contains
-		//		if (ns.contains(gs[i]))
 			size_t idx = 0u;
 			if (ns.find(guess_char, idx) != std::string::npos)
 			{
-				idx = ns.find(guess_char, idx); //damn, did it again - initialise in the if?
+				idx = ns.find(guess_char, idx);
 				matches[i] = '^';
-				ns[idx] = '^'; // don't reuse this digit
+				ns[idx] = '^';
 			}
 		}
 	}
@@ -96,7 +96,7 @@ void check_properties()
 
 }
 
-
+// Listing 3.2
 unsigned input()
 {
 	unsigned number; //try a negative number!
@@ -109,6 +109,7 @@ unsigned input()
 	return number;
 }
 
+// Listing 3.4 Taking optional input
 // Allow a way to give up
 std::optional<unsigned> read_number(std::istream& in)
 {
@@ -116,14 +117,18 @@ std::optional<unsigned> read_number(std::istream& in)
 	if (in >> result) {
 		return result;
 	}
-	return {}; // what if negative? or too big
+	std::cin.clear(); // TODO CHANGED FROM TEXT
+	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // TODO CHANGED FROM TEXT
+	return {};
 }
 
+// Listing 3.1
 unsigned some_const_number()
 {
 	return 42;
 }
 
+// Listing 3.8
 unsigned some_random_number()
 {
 	std::random_device rd; // hard to test! also, only called once, but in general more likely to be called more often...
@@ -133,6 +138,7 @@ unsigned some_random_number()
 	return dist(mt);
 }
 
+//Listing 3.3
 void guess_number(unsigned number)
 {
 	std::cout << "Guess the number.\n>";
@@ -145,6 +151,7 @@ void guess_number(unsigned number)
 	std::cout << "Well done.\n";
 }
 
+//Listing 3.5 Allow giving up
 void guess_number_or_give_up(int number)
 {
 	std::cout << "Guess the number.\n>";
@@ -202,13 +209,13 @@ void guess_any_number_or_give_up(unsigned number, fn message)
 }
 
 
+// Listing 3.11 Generating a prime number
 int some_prime_number()
 {
-	std::random_device rd; // hard to test! also, only called once, but in general more likely to be called more often...
+	std::random_device rd;
 	std::mt19937 mt(rd());
-	//std::uniform_int_distribution<unsigned> dist(0, 100); // closed [l, u]... see max fn
-	std::uniform_int_distribution<> dist(0u, 99999u); // which is clearer?
-	unsigned n = 1; // or int or what?
+	std::uniform_int_distribution<int> dist(0, 99999);
+	int n{};
 	while (!is_prime(n))
 	{
 		n = dist(mt);
@@ -234,7 +241,7 @@ int main()
 	guess_any_number_or_give_up(some_prime_number(), [&primes](int number, int guess) {
 			bool prime = primes.contains(guess);
 			return std::format("{}\n{}\n",
-				prime?"Prime":"Not prime", // maybe just say not prime, if not prime... also test length of number
+				prime?"Prime":"Not prime",
 				check_which_digits_correct(number, guess));
 		}
 	);
