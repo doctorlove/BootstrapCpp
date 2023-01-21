@@ -1,10 +1,33 @@
 #include <chrono>
+// If are using gcc 12 or earlier or clang 15 or earlier you need to clone Howard Hinnat's library for the parse method and use it's date.h
+// git clone https://github.com/HowardHinnant/date
+// If you get errors with operator<<, you also need to use the date.h from this library
+// Also, add 
+// using date::operator<<;
+// just before any 
+// std::cout << 
+//#include <date.h>
 #include <iostream>
 #include <optional>
 #include <sstream>
 #include <thread>
 
-//Listing 4.3 Use duration to move to a coarser representation
+//Listing 4.2 Duration between two time points
+void duration_to_end_of_year()
+{
+    std::chrono::time_point now = std::chrono::system_clock::now();
+    constexpr auto year = 2022;
+    auto new_years_eve = std::chrono::year_month_day(
+        std::chrono::year(year),
+        std::chrono::month(12),
+        std::chrono::day(31)
+    );
+    auto event = std::chrono::sys_days(new_years_eve);
+    std::chrono::duration dur = event - now;
+    std::cout << dur << " until event\n";
+}
+
+//Listing 4.4 Use duration to move to a coarser representation
 void durations()
 {
     using namespace std::chrono;
@@ -14,7 +37,7 @@ void durations()
     std::cout << a_day << '\n';
 }
 
-//Listing 4.4 Defining a duration
+//Listing 4.5 Defining a duration
 void defining_a_duration()
 {
     using namespace std::chrono;
@@ -30,7 +53,7 @@ void defining_a_duration()
     std::cout << "Two centuries is " << day_count << '\n';
 }
 
-//Listing 4.5 Writing and using a concept
+//Listing 4.6 Writing and using a concept
 // They are called in requirements_and_concepts below, but result in a compliation failure
 // Try uncommenting the calls and see what happens
 template<typename T>
@@ -65,12 +88,11 @@ void requirements_and_concepts()
 }
 
 
-//Listing 4.6 How many days until the end of the year?
+//Listing 4.7 How many days until the end of the year?
 void countdown()
 {
     using namespace std::chrono;
     time_point now = system_clock::now();
-
     const auto ymd = year_month_day{
         floor<days>(now)
     };
@@ -84,7 +106,26 @@ void countdown()
         << " until event \n";
 }
 
-//Listing 4.7 A testable countdown
+//Listing 4.8 Days until pay day 
+void pay_day()
+{
+    using namespace std::chrono;
+
+    time_point now = system_clock::now();
+    const auto ymd = year_month_day{
+        floor<days>(now)
+    };
+
+    auto this_year = ymd.year();
+
+    auto pay_day = ymd.year() / ymd.month() / Friday[last];
+    auto event = sys_days(pay_day);
+    duration dur = event - now;
+    std::cout << duration_cast<days>(dur)
+        << " until pay day \n";
+}
+
+//Listing 4.9 A testable countdown
 constexpr
 std::chrono::system_clock::duration countdown(std::chrono::system_clock::time_point start)
 {
@@ -101,16 +142,18 @@ std::chrono::system_clock::duration countdown(std::chrono::system_clock::time_po
     return event - start;
 }
 
-//Listing 4.8 Check the countdown function
+//Listing 4.10 Check the countdown function
 void check_properties()
 {
     using namespace std::chrono;
     constexpr auto new_years_eve = 2022y / December / last;
     constexpr auto one_day_away = sys_days{ new_years_eve } - 24h;
     constexpr auto result = countdown(one_day_away);
+
+    static_assert(duration_cast<days>(result) == days{ 1 });
 }
 
-//Listing 4.10 Reading a date
+//Listing 4.13 Reading a date
 std::optional<std::chrono::year_month_day> read_date(std::istream& in)
 {
     using namespace std::string_literals;
@@ -126,7 +169,7 @@ std::optional<std::chrono::year_month_day> read_date(std::istream& in)
     return {};
 }
 
-//Listing 4.11 Countdown to any event
+//Listing 4.14 Countdown to any event
 constexpr std::chrono::system_clock::duration
 countdown_to(std::chrono::system_clock::time_point now,
     std::chrono::year_month_day date)
@@ -136,7 +179,7 @@ countdown_to(std::chrono::system_clock::time_point now,
     return event - now;
 }
 
-//Listing 4.13 Countdown in local time
+//Listing 4.14 Countdown in local time
 std::chrono::system_clock::duration
 countdown_in_local_time(std::chrono::system_clock::time_point now,
     std::chrono::year_month_day date)
@@ -149,6 +192,9 @@ countdown_in_local_time(std::chrono::system_clock::time_point now,
 
 int main()
 {
+    //Listing 4,2
+    duration_to_end_of_year();
+
     //Listing 4.3
     durations();
 
@@ -161,13 +207,16 @@ int main()
     //Listing 4.6
     countdown();
 
-    //Listing 4.7
+    //Listing 4.8
+    pay_day();
+
+    //Listing 4.9
     std::cout << countdown(std::chrono::system_clock::now()) << " until event \n"; // calling listing 4.7
 
-    //Listing 4.8
+    //Listing 4.10
     check_properties();
 
-    //Listing 4.9 Call the countdown in a loop
+    //Listing 4.11 Call the countdown in a loop
     using namespace std::chrono;
     for (int i = 0; i < 5; ++i)
     {
@@ -177,7 +226,7 @@ int main()
             " until event\n";
     }
 
-    //Listing 4.12 A general purpose countdown
+    //Listing 4.15 A general purpose countdown
     std::cout << "Enter a date\n>";
     std::string str;
     std::cin >> str;
@@ -190,6 +239,9 @@ int main()
             " until " << event_date.value() << "\n";
 
         // Calling the function from listing 4.13
+        // WARNING - needs the date library compiled. 
+        // See Rainer Grimm's website has instructions for compiling
+        //   and using the library (https://www.modernescpp.com/index.php/calendar-and-time-zone-in-c-20-time-zones)
         auto local_dur = countdown_in_local_time(system_clock::now(), event_date.value());
         std::cout << duration_cast<days>(local_dur) <<
             " until " << event_date.value() << "\n";
