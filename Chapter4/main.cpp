@@ -34,7 +34,8 @@ void durations()
     auto nearly_a_day = hours(23);
     days a_day = duration_cast<days>(nearly_a_day);
     hours round_trip = a_day;
-    std::cout << a_day << '\n';
+    std::cout << nearly_a_day << " cast to " << a_day 
+        << " and cast back to " << round_trip << '\n';
 }
 
 //Listing 4.5 Defining a duration
@@ -83,7 +84,7 @@ void also_must_be_a_duck(Quacks auto x)
 void requirements_and_concepts()
 {
     //might_be_a_duck(42); // error left of '.Quack' must have class/struct/union
-    //must_be_a_duck(42); //'f2': no matching overloaded function found, could be 'void f2(T)',  the associated constraints are not satisfied
+    //must_be_a_duck(42); //'must_be_a_duck': no matching overloaded function found, could be 'void must_be_a_duck(T)',  the associated constraints are not satisfied
     //also_must_be_a_duck(42);
 }
 
