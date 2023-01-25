@@ -6,7 +6,7 @@
 // using date::operator<<;
 // just before any 
 // std::cout << 
-//#include <date.h>
+//#include <date/date.h>
 #include <iostream>
 #include <optional>
 #include <sstream>
@@ -154,7 +154,7 @@ void check_properties()
     static_assert(duration_cast<days>(result) == days{ 1 });
 }
 
-//Listing 4.13 Reading a date
+//Listing 4.12 Reading a date
 std::optional<std::chrono::year_month_day> read_date(std::istream& in)
 {
     using namespace std::string_literals;
@@ -170,7 +170,7 @@ std::optional<std::chrono::year_month_day> read_date(std::istream& in)
     return {};
 }
 
-//Listing 4.14 Countdown to any event
+//Listing 4.13 Countdown to any event
 constexpr std::chrono::system_clock::duration
 countdown_to(std::chrono::system_clock::time_point now,
     std::chrono::year_month_day date)
@@ -227,7 +227,7 @@ int main()
             " until event\n";
     }
 
-    //Listing 4.15 A general purpose countdown
+    //Listing 4.14 A general purpose countdown
     std::cout << "Enter a date\n>";
     std::string str;
     std::cin >> str;
@@ -239,14 +239,20 @@ int main()
         std::cout << duration_cast<days>(dur) <<
             " until " << event_date.value() << "\n";
 
-        // Calling the function from listing 4.13
+        // Calling the function from listing 4.15
         // WARNING - needs the date library compiled. 
         // See Rainer Grimm's website has instructions for compiling
         //   and using the library (https://www.modernescpp.com/index.php/calendar-and-time-zone-in-c-20-time-zones)
+        // You need a curllib and to include the tz.cpp from thje src folder in your date clone
+        // So the build command will be along the line of
+        // clang++ --std=c++20 main..cpp -o ./main..out
+        //    /mnt/d/dev/date/src/tz.cpp
+        //    -Wall -I/mnt/d/dev/date/include
+        //    -I/mnt/d/dev/date/include
+        //    -lcurl
         auto local_dur = countdown_in_local_time(system_clock::now(), event_date.value());
         std::cout << duration_cast<days>(local_dur) <<
             " until " << event_date.value() << "\n";
-
     }
 
 }
