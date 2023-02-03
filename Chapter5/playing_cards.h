@@ -14,11 +14,11 @@ namespace cards
 		Spade
 	};
 
-	//Listing 5.5
+	//Listing 5.5 and 5.7
 	struct Card
 	{
-		int value; // TODO initialize
-		Suit suit;
+		int value{};
+		Suit suit{};
 
 		//Less than considered in listing, 5.16
 		//bool operator<(const Card&) const
@@ -29,6 +29,24 @@ namespace cards
 		// Improved in Listing 5.17
 		auto operator<=>(const Card&) const = default;//means aces low
 	};
+
+	//Listing 5.8 A card class
+	class Cardv2
+	{
+	public:
+		Cardv2() = default;
+		Cardv2(int value, Suit suit) :
+			value(value),
+			suit(suit)
+		{
+		}
+		int get_value() const { return value; }
+		Suit get_suit() const { return suit; }
+	private:
+		int value;
+		Suit suit;
+	};
+
 
 	std::ostream& operator<<(std::ostream& os, const Card& card);
 	Suit& operator++(Suit& suit);

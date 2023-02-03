@@ -22,6 +22,10 @@ int main()
 	cards::Card card{ 2, cards::Suit::Club }; //after Listing 5.5
 	std::cout << card << '\n';
 
+	// This is UB if we don't initialize the fields
+	cards::Card dangerous_card;
+	std::cout << dangerous_card <<'\n';
+
 	check_properties();
 
 	cards::higher_lower();
