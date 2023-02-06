@@ -3,6 +3,8 @@
 #include <array>
 #include <compare>
 #include <iostream>
+#include <string>
+#include <variant>
 
 namespace cards
 {
@@ -26,7 +28,7 @@ namespace cards
 		//	return value < other.value&& suit < other.suit;
 		//}
 		 
-		// Improved in Listing 5.17
+		// Added in Listing 5.19
 		auto operator<=>(const Card&) const = default;//means aces low
 	};
 
@@ -48,13 +50,29 @@ namespace cards
 	};
 
 
-	std::ostream& operator<<(std::ostream& os, const Card& card);
+	std::ostream& operator<<(std::ostream& os, const Card& card);  // Listing 5.9
+
+	// avrious other functions in listing, defined in the source file and decalred here
 	Suit& operator++(Suit& suit);
 	std::string to_string(Suit suit);
+	std::string card_value_to_string(int value);
 
 	std::array<Card, 52> create_deck();
 	void shuffle_deck(std::array<Card, 52>& deck);
 
-	bool guess_correct(char guess, const Card& current, const Card& next);
+	bool is_guess_correct(char guess, const Card& current, const Card& next);
 	void higher_lower();
+
+	//Listing 5.24 A joker
+	struct Joker
+	{
+	};
+
+	std::array<std::variant<Card, Joker>, 54> create_extended_deck();
+	void shuffle_deck(std::array<std::variant<Card, Joker>, 54>& deck);
+	bool is_guess_correct(char c,
+		const std::variant<Card, Joker>& current,
+		const std::variant<Card, Joker>& next);
+	std::ostream& operator<<(std::ostream& os, const std::variant<Card, Joker>& card);
+	void higher_lower_with_jokers();
 }
