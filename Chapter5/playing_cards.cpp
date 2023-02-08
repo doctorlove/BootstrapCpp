@@ -26,8 +26,9 @@ namespace cards
 			return "Clubs";
 		case Suit::Spade:
 			return "Spades";
+		default:
+			return "?";
 		}
-		return "?";
 	}
 
 	// Listing 5.12 Use the enum name rather than value, improved on in listing 5.14
@@ -108,7 +109,7 @@ namespace cards
 				value = 1;
 				++suit;
 			}
-			return Card(value++, suit);
+		return Card{ value++, suit };
 		});
 		return deck;
 	}
