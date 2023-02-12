@@ -158,7 +158,7 @@ namespace cards
 	{
 		std::array<std::variant<Card, Joker>, 54> deck{ Joker{} , Joker{} };
 		std::array<Card, 52> cards = create_deck();
-		std::ranges::copy(cards, std::begin(deck) + 2);
+		std::ranges::copy(cards, deck.begin() + 2);
 		return deck;
 	}
 
