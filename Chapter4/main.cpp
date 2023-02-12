@@ -51,7 +51,7 @@ void defining_a_duration()
     seconds sec = two_hundred_years;
     hours hrs = two_hundred_years;
     days day_count = duration_cast<days>(two_hundred_years);
-    std::cout << "Two centuries is " << day_count << '\n';
+    std::cout << "Two centuries is approximately " << day_count << '\n';
 }
 
 //Listing 4.6 Writing and using a concept
