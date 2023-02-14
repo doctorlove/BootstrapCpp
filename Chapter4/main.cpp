@@ -7,6 +7,7 @@
 // just before any 
 // std::cout << 
 //#include <date/date.h>
+#include <cassert>
 #include <iostream>
 #include <optional>
 #include <sstream>
@@ -89,7 +90,7 @@ void requirements_and_concepts()
 }
 
 
-//Listing 4.7 How many days until the end of the year?
+//Listing 4.7 How many days until the last day of the year?
 void countdown()
 {
     using namespace std::chrono;
@@ -143,17 +144,6 @@ std::chrono::system_clock::duration countdown(std::chrono::system_clock::time_po
     return event - start;
 }
 
-//Listing 4.10 Check the countdown function
-void check_properties()
-{
-    using namespace std::chrono;
-    constexpr auto new_years_eve = 2022y / December / last;
-    constexpr auto one_day_away = sys_days{ new_years_eve } - 24h;
-    constexpr auto result = countdown(one_day_away);
-
-    static_assert(duration_cast<days>(result) == days{ 1 });
-}
-
 //Listing 4.12 Reading a date
 std::optional<std::chrono::year_month_day> read_date(std::istream& in)
 {
@@ -186,9 +176,24 @@ countdown_in_local_time(std::chrono::system_clock::time_point now,
     std::chrono::year_month_day date)
 {
     using namespace std::chrono;
-    auto local_now = zoned_time(current_zone(), now).get_local_time();
-    auto event = local_days(date) + 0s;
-    return event - local_now;
+    auto sys_event = zoned_time(current_zone(), local_days{ date }).get_sys_time();
+    return sys_event - now;
+}
+
+//Listing 4.10 Check the countdown function
+void check_properties()
+{
+    using namespace std::chrono;
+    constexpr auto new_years_eve = 2022y / December / last;
+    constexpr auto one_day_away = sys_days{ new_years_eve } - 24h;
+    constexpr auto result = countdown(one_day_away);
+
+    static_assert(duration_cast<days>(result) == days{ 1 });
+
+    // An example of another test, not included in the text of the book
+    auto now = sys_days{ 2022y / March / 27 };
+    auto difference = duration_cast<hours>(countdown_in_local_time(now, 2022y / March / 28));
+    // assert(difference == 23h); // The assert works for the "Europe/London" time zone. Yours might vary
 }
 
 int main()
@@ -243,7 +248,8 @@ int main()
         // WARNING - needs the date library compiled. 
         // See Rainer Grimm's website has instructions for compiling
         //   and using the library (https://www.modernescpp.com/index.php/calendar-and-time-zone-in-c-20-time-zones)
-        // You need a curllib and to include the tz.cpp from thje src folder in your date clone
+        // Or Howard Hinnant's instructions https://howardhinnant.github.io/date/tz.html#Installation
+        // You need a curllib and to include the tz.cpp from the src folder in your date clone
         // So the build command will be along the line of
         // clang++ --std=c++20 main..cpp -o ./main..out
         //    /mnt/d/dev/date/src/tz.cpp
@@ -251,8 +257,8 @@ int main()
         //    -I/mnt/d/dev/date/include
         //    -lcurl
         auto local_dur = countdown_in_local_time(system_clock::now(), event_date.value());
-        std::cout << duration_cast<days>(local_dur) <<
-            " until " << event_date.value() << "\n";
+        std::cout << duration_cast<hours>(local_dur) <<
+            " until " << event_date.value() << "in local time \n";
     }
 
 }
