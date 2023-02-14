@@ -32,7 +32,7 @@ void duration_to_end_of_year()
 void durations()
 {
     using namespace std::chrono;
-    auto nearly_a_day = hours(23);
+    auto nearly_a_day = hours{ 23 };
     days a_day = duration_cast<days>(nearly_a_day);
     hours round_trip = a_day;
     std::cout << nearly_a_day << " cast to " << a_day 
