@@ -10,14 +10,14 @@ namespace cards
 {
 	//Listing 5.4
 	enum class Suit {
-		Heart,
-		Diamond,
-		Club,
-		Spade
+		Hearts,
+		Diamonds,
+		Clubs,
+		Spades
 	};
 
-	//Listing 5.5 and 5.7
-	struct Card
+	//Listing 5.5 and 5.7, just called Card in the text
+	struct CardVersion1
 	{
 		int value{};
 		Suit suit{};
@@ -28,31 +28,32 @@ namespace cards
 		//	return value < other.value&& suit < other.suit;
 		//}
 		 
-		// Added in Listing 5.19
-		auto operator<=>(const Card&) const = default;//means aces low
 	};
 
-	//Listing 5.8 A card class
-	class Cardv2
+	//Listing 5.9 A card class
+	class Card
 	{
 	public:
-		Cardv2() = default;
-		Cardv2(int value, Suit suit) :
-			value(value),
-			suit(suit)
+		Card() = default;
+		Card(int value, Suit suit) :
+			value_(value),
+			suit_(suit)
 		{
 		}
-		int get_value() const { return value; }
-		Suit get_suit() const { return suit; }
+		int value() const { return value_; }
+		Suit suit() const { return suit_; }
+
+		// Added in Listing 5.20 to provide less than, and more besides
+		auto operator<=>(const Card&) const = default;//means aces low
 	private:
-		int value;
-		Suit suit;
+		int value_{};
+		Suit suit_{};
 	};
 
 
-	std::ostream& operator<<(std::ostream& os, const Card& card);  // Listing 5.9
+	std::ostream& operator<<(std::ostream& os, const Card& card);  // Listing 5.10
 
-	// avrious other functions in listing, defined in the source file and decalred here
+	// various other functions, defined in the source file and declared here
 	Suit& operator++(Suit& suit);
 	std::string to_string(Suit suit);
 	std::string card_value_to_string(int value);
@@ -63,7 +64,7 @@ namespace cards
 	bool is_guess_correct(char guess, const Card& current, const Card& next);
 	void higher_lower();
 
-	//Listing 5.24 A joker
+	//Listing 5.25 A joker
 	struct Joker
 	{
 	};

@@ -146,6 +146,7 @@ void check_properties(const std::vector<std::vector<int>> & triangle)
     }
 }
 
+//Listing 2.16 Show odd numbers as stars
 void show_view(std::ostream& s,
     const std::vector<std::vector<int>>& v)
 {

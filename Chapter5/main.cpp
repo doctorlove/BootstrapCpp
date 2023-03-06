@@ -12,22 +12,22 @@ void check_properties()
 	auto as_set = std::set<Card>(cards.begin(), cards.end());//need comparator
 	assert(as_set.size() == 52);
 
-	assert(is_guess_correct('l', { 9, Suit::Club }, { 6, Suit::Club }));
-	assert(is_guess_correct('h', { 5, Suit::Club }, { 7, Suit::Spade }));
-	assert(is_guess_correct('h', { 3, Suit::Spade }, { 5, Suit::Club }));
+	assert(is_guess_correct('l', { 9, Suit::Clubs }, { 6, Suit::Clubs }));
+	assert(is_guess_correct('h', { 5, Suit::Clubs }, { 7, Suit::Spades }));
+	assert(is_guess_correct('h', { 3, Suit::Spades }, { 5, Suit::Clubs }));
 
 	assert(is_guess_correct('l', 
-			std::variant<Card, Joker>(Card{ 9, Suit::Club }),
-			std::variant<Card, Joker>(Card{ 6, Suit::Club })
+			std::variant<Card, Joker>(Card{ 9, Suit::Clubs }),
+			std::variant<Card, Joker>(Card{ 6, Suit::Clubs })
 		)
 	);
 	assert(is_guess_correct('l',
 			std::variant<Card, Joker>(Joker{}),
-			std::variant<Card, Joker>(Card{ 6, Suit::Club })
+			std::variant<Card, Joker>(Card{ 6, Suit::Clubs })
 		)
 	);
 	assert(is_guess_correct('l',
-		std::variant<Card, Joker>(Card{ 6, Suit::Club }),
+		std::variant<Card, Joker>(Card{ 6, Suit::Clubs }),
 		std::variant<Card, Joker>(Joker{})
 		)
 	);
@@ -41,14 +41,14 @@ void check_properties()
 int main()
 {
 	std::cout << "Some warm up\n";
-	cards::Card card{ 2, cards::Suit::Club }; //after Listing 5.5
+	cards::Card card{ 2, cards::Suit::Clubs }; //after Listing 5.5
 	std::cout << card << '\n';
 
 	// This is UB if we don't initialize the fields
 	cards::Card dangerous_card;
 	std::cout << dangerous_card <<'\n';
 
-	std::cout << cards::Card{ 1, cards::Suit::Heart } << '\n';
+	std::cout << cards::Card{ 1, cards::Suit::Hearts } << '\n';
 
 	check_properties();
 
