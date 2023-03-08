@@ -13,7 +13,7 @@ namespace cards
 	//	return os;
 	//}
 
-	//Listing 5.12 Turn an enum value into a string
+	//Listing 5.14 Turn an enum value into a string
 	std::string to_string(Suit suit)
 	{
 		using namespace std::literals;
@@ -32,19 +32,20 @@ namespace cards
 		}
 	}
 
-	// Listing 5.13 Use the enum name rather than value, improved on in listing 5.15
-	//std::ostream& operator<<(std::ostream& os, const Card& card)
-	//{
-	//	os << card.value << " of " << to_string(card.suit);
-	//	return os;
-	//}
+	// Similar to Listing 5.13 Use the enum name rather than value, improved on in listing 5.15
+	// version here using the original struct, to give a different overload
+	std::ostream& operator<<(std::ostream& os, const CardVersion1& card)
+	{
+		os << card.value << " of " << to_string(card.suit);
+		return os;
+	}
 
-	//Listing 5.14 Convert card value to a string
-	std::string card_value_to_string(int value)
+	//Listing 5.15 Convert card value to a string
+	std::string to_string(FaceValue value)
 	{
 		using namespace std::literals;
 
-		switch (value)
+		switch (value.value())
 		{
 		case 1:
 			return "Ace"s;
@@ -55,20 +56,20 @@ namespace cards
 		case 13:
 			return "King"s;
 		default:
-			return std::to_string(value);
+			return std::to_string(value.value());
 		}
 	}
 
-	//Listing 5.15 Show ace, jack, queen, king or number
+	//Listing 5.16 Show ace, jack, queen, king or number
 	std::ostream& operator<<(std::ostream& os, const Card& card)
 	{
-		os << card_value_to_string(card.value())
+		os << to_string(card.value())
 			<< " of " << to_string(card.suit());
 		return os;
 	}
 
 
-	// Listing 5.16 Build a deck of cards, given as
+	// Listing 5.17 Build a deck of cards, given as
 	// std::array<Card, 52> create_deck() in the book
 	std::array<Card, 52> create_deck_first_way()
 	{
@@ -79,14 +80,14 @@ namespace cards
 		{
 			for (int value = 1; value <= 13; value++)
 			{
-				*card = Card{ value, suit };
+				*card = Card{ FaceValue(value), suit };
 				++card;
 			}
 		}
 		return deck;
 	}
 
-	// Listing 5.17 increment our enum
+	// Listing 5.18 increment our enum
 	Suit& operator++(Suit& suit)
 	{
 		// Dangerous! See https://stackoverflow.com/questions/3475152/why-cant-i-increment-a-variable-of-an-enumerated-type
@@ -98,7 +99,7 @@ namespace cards
 		return suit;
 	}
 
-	//Listing 5.18 Generating the deck of cards
+	//Listing 5.19 Generating the deck of cards
 	std::array<Card, 52> create_deck()
 	{
 		std::array<Card, 52> deck;
@@ -110,12 +111,12 @@ namespace cards
 				value = 1;
 				++suit;
 			}
-		return Card{ value++, suit };
+		return Card{ FaceValue(value++), suit };
 		});
 		return deck;
 	}
 
-	// Listing 5.21 Shuffle the cards
+	// Listing 5.22 Shuffle the cards
 	void shuffle_deck(std::array<Card, 52>& deck)
 	{
 		std::random_device rd;
@@ -123,14 +124,14 @@ namespace cards
 		std::ranges::shuffle(deck, gen);
 	}
 
-	// Listing 5.22 Is the guess correct?
+	// Listing 5.23 Is the guess correct?
 	bool is_guess_correct(char guess, const Card & current, const Card & next)
 	{
 		return (guess == 'h' && next > current) 
 			    || (guess == 'l' && next < current);
 	}
 
-	//Listing 5.23 Higher lower game
+	//Listing 5.24 Higher lower game
 	void higher_lower()
 	{
 		auto deck = create_deck();
@@ -154,7 +155,7 @@ namespace cards
 		std::cout << "You got " << index << " guess correct\n";
 	}
 
-	//Listing 5.26 Creating an extended deck
+	//Listing 5.28 Create an extended deck
 	std::array<std::variant<Card, Joker>, 54> create_extended_deck()
 	{
 		std::array<std::variant<Card, Joker>, 54> deck{ Joker{} , Joker{} };
@@ -171,7 +172,7 @@ namespace cards
 		std::ranges::shuffle(deck, gen);
 	}
 
-	//Listing 5.29 Is the guess correct for an extended deck
+	//Listing 5.30 Is the guess correct for an extended deck
 	bool is_guess_correct(char c,
 		const std::variant<Card, Joker>& current,
 		const std::variant<Card, Joker>& next)
@@ -183,7 +184,7 @@ namespace cards
 		return is_guess_correct(c, current_card, next_card);
 	}
 
-	//Listing 5.30 Stream out cards and jokers
+	//Listing 5.31 Stream out cards and jokers
 	std::ostream& operator<<(std::ostream& os, const std::variant<Card, Joker>& card)
 	{
 		if (std::holds_alternative<Joker>(card))
@@ -193,7 +194,7 @@ namespace cards
 		return os;
 	}
 
-	//Listing 5.31 Higher lower game with Jokers too
+	//Listing 5.32 Higher lower game with Jokers too
 	void higher_lower_with_jokers()
 	{
 		auto deck = create_extended_deck();
