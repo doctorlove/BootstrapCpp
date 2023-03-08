@@ -5,6 +5,14 @@
 
 namespace cards
 {
+	// After Listing 5.29, we noticed the repetition, so said we wcould write a function template instead of having two shuffle functions:
+	template<typename T> void shuffle_either_deck(T& deck)
+	{
+		std::random_device rd;
+		std::mt19937 gen{ rd() };
+		std::ranges::shuffle(deck, gen);
+	}
+
 
 	// Listing 5.11 Define operator << for a card, improved in Listing 5.12
 	//std::ostream& operator<<(std::ostream& os, const Card& card)
@@ -152,7 +160,7 @@ namespace cards
 			}
 			++index;
 		}
-		std::cout << "You got " << index << " guess correct\n";
+		std::cout << "You got " << index << " correct\n";
 	}
 
 	//Listing 5.28 Create an extended deck
@@ -215,6 +223,6 @@ namespace cards
 			}
 			++index;
 		}
-		std::cout << "You got " << index << " guess correct\n";
+		std::cout << "You got " << index << " correct\n";
 	}
 }
