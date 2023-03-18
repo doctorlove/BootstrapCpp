@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 namespace Race
 {
     // Listing 6.2 A base class
@@ -25,4 +27,8 @@ namespace Race
             return y;
         }
     };
+
+    void move_blobs(std::vector<Race::StepperBlob>& blobs);
+    void draw_blobs(const std::vector<Race::StepperBlob>& blobs);
+    void race(std::vector<Race::StepperBlob>& blobs);
 }
