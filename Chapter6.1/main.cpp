@@ -54,13 +54,13 @@ void race_steppers()
 void do_race()
 {
     using namespace Race;
-    std::vector<std::shared_ptr<Blob>> blobs;
+    std::vector<std::unique_ptr<Blob>> blobs;
     const int number = 4;
     std::random_device rd;
     for (int i = 1; i < number; i += 2)
     {
-        blobs.emplace_back(std::make_shared<StepperBlob>());
-        blobs.emplace_back(std::make_shared<RandomBlob<std::default_random_engine, std::uniform_int_distribution<int>>>
+        blobs.emplace_back(std::make_unique<StepperBlob>());
+        blobs.emplace_back(std::make_unique<RandomBlob<std::default_random_engine, std::uniform_int_distribution<int>>>
             (std::default_random_engine{ rd() }, std::uniform_int_distribution{ 0, 4 })
         );
     }

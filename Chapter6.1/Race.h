@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <vector>
 
 namespace Race
@@ -52,9 +53,7 @@ namespace Race
     void draw_blobs(const std::vector<Race::StepperBlob>& blobs);
     void race(std::vector<Race::StepperBlob>& blobs);
 
-    // Will need
-    void race(std::vector<std::shared_ptr<Blob>>& blob);
-    //void move_blobs(std::vector<std::shared_ptr<Blob>>& blobs);
-    //void draw_blobs(const std::vector<std::shared_ptr<Blob>>& blob);
-
+    void race(std::vector<std::unique_ptr<Blob>>& blob);
+    void move_blobs(std::vector<std::unique_ptr<Blob>>& blobs);
+    void draw_blobs(const std::vector<std::unique_ptr<Blob>>& blob);
 }
