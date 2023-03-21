@@ -28,7 +28,33 @@ namespace Race
         }
     };
 
+    // Listing 6.11 A general purpose random blob
+    template <typename T, typename U>
+    class RandomBlob : public Blob
+    {
+        int y = 0;
+        T generator;
+        U distribution;
+    public:
+        RandomBlob(T gen, U dis)
+            : generator(gen), distribution(dis)
+        {
+
+        }
+        void step() override
+        {
+            y += static_cast<int>(distribution(generator));
+        }
+        int steps() const override { return y; }
+    };
+
     void move_blobs(std::vector<Race::StepperBlob>& blobs);
     void draw_blobs(const std::vector<Race::StepperBlob>& blobs);
     void race(std::vector<Race::StepperBlob>& blobs);
+
+    // Will need
+    void race(std::vector<std::shared_ptr<Blob>>& blob);
+    //void move_blobs(std::vector<std::shared_ptr<Blob>>& blobs);
+    //void draw_blobs(const std::vector<std::shared_ptr<Blob>>& blob);
+
 }
