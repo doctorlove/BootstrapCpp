@@ -11,7 +11,7 @@ void Race::draw_blobs(const std::vector<Race::StepperBlob>& blobs)
     for (int y = 8; y >= 0; --y)
     {
         std::string output = y > 2 ? "  " : "| ";
-        for (auto& blob : blobs)
+        for (const auto& blob : blobs)
         {
             if (blob.steps() >= y)
                 output += "* ";
@@ -79,7 +79,7 @@ void Race::draw_blobs(const std::vector<std::unique_ptr<Race::Blob>>& blobs)
     for (int y = 8; y >= 0; --y)
     {
         std::string output = y > 2 ? "  " : "| ";
-        for (auto& blob : blobs)
+        for (const auto& blob : blobs)
         {
             if (blob->steps() >= y)
                 output += "* ";

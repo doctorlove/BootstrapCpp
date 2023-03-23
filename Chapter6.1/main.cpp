@@ -30,13 +30,20 @@ void check_properties()
         std::default_random_engine{ rd() },
         std::uniform_int_distribution{ 0, 4 }
     };
-    rnd_blob.steps();
+    rnd_blob.step();
     assert(rnd_blob.steps() >= 0);
 
     Race::RandomBlob another_rnd_blob{
         std::default_random_engine{ rd() },
         std::poisson_distribution{ 2 }
     };
+    another_rnd_blob.step();
+    assert(another_rnd_blob.steps() >= 0);
+
+    // Listing 6.12 Testing with random generators and distributions
+    Race::RandomBlob random_blob([]() { return 0; }, [](auto x) { return x(); });
+    random_blob.step();
+    assert(random_blob.steps() == 0);
 }
 
 // Listing 6.8 A warm up race
@@ -51,28 +58,38 @@ void race_steppers()
     }
 }
 
-void do_race()
+// Listing 6.17 Create blobs for a proper race
+std::vector<std::unique_ptr<Race::Blob>> create_blobs(int number)
 {
     using namespace Race;
     std::vector<std::unique_ptr<Blob>> blobs;
-    const int number = 4;
     std::random_device rd;
-    for (int i = 1; i < number; i += 2)
+    for (int i = 0; i < number; ++i)
     {
         blobs.emplace_back(std::make_unique<StepperBlob>());
-        blobs.emplace_back(std::make_unique<RandomBlob<std::default_random_engine, std::uniform_int_distribution<int>>>
-            (std::default_random_engine{ rd() }, std::uniform_int_distribution{ 0, 4 })
+        blobs.emplace_back(std::make_unique<RandomBlob<std::default_random_engine,
+                                            std::uniform_int_distribution<int>>>
+            (
+                std::default_random_engine{ rd() },
+                std::uniform_int_distribution{ 0, 4 }
+            )
         );
     }
-
-    race(blobs);
+    return blobs;
 }
 
 int main()
 {
     check_properties();
 
+    // Running both races together might be confusing, so 
+    // choose a type of race; either 6.9 (just steppers) or 6.18 (various types)
+
     // Listing 6.9 A warm up race
-    std::vector<Race::StepperBlob> blobs(4);
+    //std::vector<Race::StepperBlob> blobs(4);
+    //Race::race(blobs);
+
+    // Listing 6.18 A proper race
+    auto blobs = create_blobs(4);
     Race::race(blobs);
 }

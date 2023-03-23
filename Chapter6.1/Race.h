@@ -1,5 +1,6 @@
 #pragma once
 
+#include <concepts>
 #include <memory>
 #include <vector>
 
@@ -30,7 +31,11 @@ namespace Race
     };
 
     // Listing 6.11 A general purpose random blob
-    template <typename T, typename U>
+    // We started with temmplate-head
+    // template <typename T, typename U>
+    // then consdiered using the concept std::invocable<> 
+    // for the generator in the text
+    template <std::invocable<> T, typename U>
     class RandomBlob : public Blob
     {
         int y = 0;
