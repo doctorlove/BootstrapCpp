@@ -12,11 +12,12 @@ namespace Race
     public:
         virtual ~Blob() = default;
         virtual void step() = 0;
-        virtual int steps() const = 0;
+        virtual int total_steps() const = 0;
     };
 
     // Listing 6.3 A Blob taking constant sized steps
-    class StepperBlob : public Blob
+    // we noted in further considerations we could mark this as final
+    class StepperBlob final : public Blob
     {
         int y = 0;
     public:
@@ -24,7 +25,7 @@ namespace Race
         {
             y += 2;
         }
-        int steps() const override
+        int total_steps() const override
         {
             return y;
         }
@@ -51,7 +52,7 @@ namespace Race
         {
             y += static_cast<int>(distribution(generator));
         }
-        int steps() const override { return y; }
+        int total_steps() const override { return y; }
     };
 
     void move_blobs(std::vector<Race::StepperBlob>& blobs);

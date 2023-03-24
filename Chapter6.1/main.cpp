@@ -12,7 +12,7 @@ void check_properties()
     // Listing 6.4 Check steps move a blob forward
     Race::StepperBlob blob;
     blob.step();
-    assert(blob.steps() == 2);
+    assert(blob.total_steps() == 2);
 
     // Listing 6.10 Type traits to check for special member functions
     static_assert(!std::is_constructible<Race::Blob>::value); // 0 for ABC
@@ -31,19 +31,19 @@ void check_properties()
         std::uniform_int_distribution{ 0, 4 }
     };
     rnd_blob.step();
-    assert(rnd_blob.steps() >= 0);
+    assert(rnd_blob.total_steps() >= 0);
 
     Race::RandomBlob another_rnd_blob{
         std::default_random_engine{ rd() },
         std::poisson_distribution{ 2 }
     };
     another_rnd_blob.step();
-    assert(another_rnd_blob.steps() >= 0);
+    assert(another_rnd_blob.total_steps() >= 0);
 
     // Listing 6.12 Testing with random generators and distributions
     Race::RandomBlob random_blob([]() { return 0; }, [](auto x) { return x(); });
     random_blob.step();
-    assert(random_blob.steps() == 0);
+    assert(random_blob.total_steps() == 0);
 }
 
 // Listing 6.8 A warm up race
@@ -58,7 +58,7 @@ void race_steppers()
     }
 }
 
-// Listing 6.17 Create blobs for a proper race
+// Listing 6.18 Create blobs for a proper race
 std::vector<std::unique_ptr<Race::Blob>> create_blobs(int number)
 {
     using namespace Race;
@@ -89,7 +89,7 @@ int main()
     //std::vector<Race::StepperBlob> blobs(4);
     //Race::race(blobs);
 
-    // Listing 6.18 A proper race
+    // Listing 6.19 A proper race
     auto blobs = create_blobs(4);
     Race::race(blobs);
 }

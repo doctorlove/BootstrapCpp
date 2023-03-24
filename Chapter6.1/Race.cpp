@@ -13,7 +13,7 @@ void Race::draw_blobs(const std::vector<Race::StepperBlob>& blobs)
         std::string output = y > 2 ? "  " : "| ";
         for (const auto& blob : blobs)
         {
-            if (blob.steps() >= y)
+            if (blob.total_steps() >= y)
                 output += "* ";
             else
                 output += "  ";
@@ -48,7 +48,7 @@ void Race::race(std::vector<Race::StepperBlob>& blobs)
     draw_blobs(blobs);
 }
 
-// Listing 6.14 A less predictable race
+// Listing 6.15 A less predictable race
 void Race::race(std::vector<std::unique_ptr<Blob>>& blobs)
 {
     using namespace std::chrono;
@@ -63,7 +63,7 @@ void Race::race(std::vector<std::unique_ptr<Blob>>& blobs)
     draw_blobs(blobs);
 }
 
-// Listing 6.15 Move all the blobs
+// Listing 6.16 Move all the blobs
 void Race::move_blobs(std::vector<std::unique_ptr<Race::Blob>>& blobs)
 {
     for (auto& blob : blobs)
@@ -72,7 +72,7 @@ void Race::move_blobs(std::vector<std::unique_ptr<Race::Blob>>& blobs)
     }
 }
 
-// Listing 6.16 Draw each blob's current position
+// Listing 6.17 Draw each blob's current position
 void Race::draw_blobs(const std::vector<std::unique_ptr<Race::Blob>>& blobs)
 {
     const int bag_height = 3;
@@ -81,7 +81,7 @@ void Race::draw_blobs(const std::vector<std::unique_ptr<Race::Blob>>& blobs)
         std::string output = y > 2 ? "  " : "| ";
         for (const auto& blob : blobs)
         {
-            if (blob->steps() >= y)
+            if (blob->total_steps() >= y)
                 output += "* ";
             else
                 output += "  ";
