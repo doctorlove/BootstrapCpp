@@ -1,31 +1,28 @@
 #include <algorithm>
 #include <cassert>
+#include <cctype>
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <string>
 
-// From https://en.cppreference.com/w/cpp/string/byte/tolower
+// Listing 7.9 Transform a string to lower case
+// Based on https://en.cppreference.com/w/cpp/string/byte/tolower
 std::string str_tolower(std::string s) {
 	std::transform(s.begin(), s.end(), s.begin(),
-		// static_cast<int(*)(int)>(std::tolower)         // wrong
-		// [](int c){ return std::tolower(c); }           // wrong
-		// [](char c){ return std::tolower(c); }          // wrong
-		[](unsigned char c) { return std::tolower(c); } // correct
+		[](unsigned char c) { return std::tolower(c); }
 	);
 	return s;
 }
 
-
-std::map<std::string, std::string> load_dictionary(const std::string& filename)
+// Listing 7.10 Load a file into a multimap
+std::multimap<std::string, std::string> load_dictionary(const std::string& filename)
 {
-	std::map<std::string, std::string> dictionary;
+	std::multimap<std::string, std::string> dictionary;
 	std::ifstream infile{ filename };
 	if (infile)
 	{
-		// pull out to fn so I can test
 		std::string line;
-		//while (infile >> line) { // spilts on the first space in the definition
 		while (std::getline(infile, line))
 		{
 			size_t position = line.find(',');
@@ -34,10 +31,8 @@ std::map<std::string, std::string> load_dictionary(const std::string& filename)
 				std::string key{ line.substr(0, position) };
 				std::string value{ line.substr(position + 1) };
 				key = str_tolower(key);
-				value = str_tolower(value);
-				// might need a multimap
-				if (dictionary.find(key) == dictionary.end())
-					dictionary[key] = value;
+				//dictionary.insert({ key, value }); or
+				dictionary.emplace(key, value);
 			}
 		}
 	}
@@ -50,7 +45,7 @@ std::map<std::string, std::string> load_dictionary(const std::string& filename)
 }
 
 // Listing 7.5 Find an overlapping word
-std::pair<std::string, int> overlap(std::string word,
+std::pair<std::string, int> find_overlapping_word_v1(std::string word,
 	const std::map<std::string, std::string>& dictionary)
 {
 	size_t offset = 1;
@@ -70,6 +65,50 @@ std::pair<std::string, int> overlap(std::string word,
 	return std::make_pair("", -1);
 }
 
+// Listing 7.8 Find an overlapping word more efficiently
+std::pair<std::string, int> find_overlapping_word(std::string word,
+	const std::map<std::string, std::string>& dictionary)
+{
+	size_t offset = 1;
+	while (offset < word.size())
+	{
+		auto stem = word.substr(offset);
+		auto [lb, ub] = dictionary.equal_range(stem);
+		if (lb != dictionary.end() &&
+			stem == lb->first.substr(0, stem.size()))
+		{
+			return std::make_pair(lb->first, offset);
+		}
+		++offset;
+	}
+	return std::make_pair("", -1);
+}
+
+#include <concepts>
+#include <random>
+template <std::invocable<> T>
+std::pair<std::string, int> find_overlapping_word_from_dictionary(std::string word,
+	const std::multimap<std::string, std::string>& dictionary, T gen)
+{
+	size_t offset = 1;
+	while (offset < word.size())
+	{
+		auto stem = word.substr(offset);
+		auto [lb, ub] = dictionary.equal_range(stem);
+		if (lb != dictionary.end() &&
+			stem == lb->first.substr(0, stem.size()))
+		{
+			std::vector<std::pair<std::string, std::string>> dest(1); // TODO something better?
+			std::sample(lb, ub, dest.begin(), 1, gen);
+			auto found = dest[0].first;
+			return std::make_pair(found, offset);
+		}
+		++offset;
+	}
+	return std::make_pair("", -1);
+}
+
+
 void check_properties()
 {
 	std::map<std::string, std::string> first{
@@ -85,22 +124,21 @@ void check_properties()
 		{ "struct", ""},
 		{ "vector", ""},
 	};
-	auto [got1, offset1] = overlap("sprint", second);
+
+	auto [got1, offset1] = find_overlapping_word("sprint", second);
 	assert(got1 == "integer");
-	auto [got2, offset2] = overlap("minus", second);
+	auto [got2, offset2] = find_overlapping_word("minus", second);
 	assert(got2 == "struct");
-	auto [got3, offset3] = overlap("vector", first);
+	auto [got3, offset3] = find_overlapping_word("vector", first);
 	assert(got3 == "torch");
 
-	auto [got4, offset4] = overlap("class", first);
+	auto [got4, offset4] = find_overlapping_word("class", first);
 	assert(got4 == "assault");
-	std::string answer = "class" + got4.substr(offset4 + 1);
 	assert(offset4 == 2);
 
-	// what about full overlaps?
-	// template plate
-	//-> template
-
+	auto [got, offset] = find_overlapping_word("class", {});
+	assert(got == "");
+	assert(offset == -1);
 }
 
 // Listing 7.1 Creating and displaying a map, along with some one liners considered in the text
@@ -144,7 +182,7 @@ void simple_answer_smash(
 {
 	for (const auto & [word, definition] : keywords)
 	{
-		auto [second_word, offset] = overlap(word, dictionary);
+		auto [second_word, offset] = find_overlapping_word(word, dictionary);
 		std::string second_definition = dictionary.at(second_word);
 		std::cout << definition << "\nAND\n" << second_definition << '\n';
 
@@ -162,6 +200,52 @@ void simple_answer_smash(
 		}
 		std::cout << word << ' ' << second_word << "\n\n\n";
 	}
+}
+
+// Listing 7.? Better answer smash game
+void answer_smash(
+	const std::multimap<std::string, std::string>& keywords,
+	const std::multimap<std::string, std::string>& dictionary)
+{
+	std::mt19937 gen{ std::random_device{}() };
+	const int count = 5;
+	std::vector<std::pair<std::string, std::string>> first_words(count);
+	std::sample(keywords.begin(), keywords.end(), first_words.begin(), count, gen);
+	for (const auto& [word, definition] : first_words)
+	{
+		auto [second_word, offset] = find_overlapping_word_from_dictionary(word, dictionary, gen);
+		if (second_word == "" || second_word == word)
+		{
+			std::cout << "couldn't find a match for " << word << '\n';
+			continue; // TODO maybe remove keywords we don't match?
+		}
+		const auto& [lb, ub] = dictionary.equal_range(second_word);
+		std::vector<std::pair<std::string, std::string>> dest(1); // TODO something better? maybe a view?
+		std::sample(lb, ub, dest.begin(), 1, gen);
+		std::string second_definition = dest[0].first;
+		std::cout << definition << "\nAND\n" << second_definition << '\n';
+
+		std::string answer = word.substr(0, offset) + second_word;
+
+		std::string response;
+		std::getline(std::cin, response);
+		if (response == answer)
+		{
+			std::cout << "CORRECT!!!!!!!!!\n";
+		}
+		else
+		{
+			std::cout << answer << '\n';
+		}
+		std::cout << word << ' ' << second_word << "\n\n\n";
+	}
+}
+void full_game()
+{
+	// raw strings and  std::filesystem::path. (since C++17)
+	const auto dictionary = load_dictionary(R"(dictionary.csv)");
+	const auto keywords = load_dictionary(R"(keywords.csv)");
+	answer_smash(keywords, dictionary);
 }
 
 int main()
@@ -189,11 +273,5 @@ int main()
 	};
 	simple_answer_smash(keywords, dictionary);
 
-	//auto d = load_dictionary(R"(Chapter7\wordnetcode.txt)"); // note about raw strings
-	auto d = load_dictionary(R"(wordnetcode.txt)");
-	// then send in
-	// need a function and maybe randomise which gets kept? Or maybe use a multimap?
-	// also unordered maps
-	// and a random sample of key words
-	// maybe string_view for definition?
+	full_game();
 }
