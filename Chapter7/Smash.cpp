@@ -98,14 +98,12 @@ void smashing::answer_smash(
 	std::sample(keywords.begin(), keywords.end(), first_words.begin(), count, gen);
 	for (const auto& [word, definition] : first_words)
 	{
-		auto [second_word, offset] = select_overlapping_word_from_dictionary(word, dictionary, gen);
+		auto [second_word, second_definition, offset] = select_overlapping_word_from_dictionary(word, dictionary, gen);
 		if (second_word == "" || second_word == word)
 		{
 			std::cout << "couldn't find a match for " << word << '\n';
 			continue; // TODO maybe remove keywords we don't match?
 		}
-		const auto& [lb, ub] = dictionary.equal_range(second_word); // we are doing this twice
-		std::string second_definition = lb->second; // send pair back from find word?
 		std::cout << definition << "\nAND\n" << second_definition << '\n';
 
 		std::string answer = word.substr(0, offset) + second_word;

@@ -82,20 +82,20 @@ void check_properties()
 	};
 
 	FakeGen fake;
-	auto [got1_2, offset1_2] = select_overlapping_word_from_dictionary<FakeGen>("sprint", second_2, fake);
-	assert(got1_2 == "integer");
-	auto [got2_2, offset2_2] = select_overlapping_word_from_dictionary("minus", second_2, FakeGen());
-	assert(got2_2 == "struct");
-	auto [got3_2, offset3_2] = select_overlapping_word_from_dictionary("vector", first_2, FakeGen());
-	assert(got3_2 == "torch");
+	auto [word1, definition1, offset1_2] = select_overlapping_word_from_dictionary<FakeGen>("sprint", second_2, fake);
+	assert(word1 == "integer");
+	auto [word2, definition2, offset2_2] = select_overlapping_word_from_dictionary("minus", second_2, FakeGen());
+	assert(word2 == "struct");
+	auto [word3, definition3, offset3_2] = select_overlapping_word_from_dictionary("vector", first_2, FakeGen());
+	assert(word3 == "torch");
 
-	auto [got4_2, offset4_2] = select_overlapping_word_from_dictionary("class", first_2, FakeGen());
-	assert(got4_2 == "assault");
-	assert(offset4_2 == 2);
+	auto [word4, definition4, offset4_2] = select_overlapping_word_from_dictionary("class", first_2, FakeGen());
+	assert(word4 == "assault");
+	assert(offset4 == 2);
 
-	auto [got_2, offset_2] = select_overlapping_word_from_dictionary("class", {}, FakeGen());
-	assert(got_2 == "");
-	assert(offset_2 == -1);
+	auto [no_word, no_definition, no_offset] = select_overlapping_word_from_dictionary("class", {}, FakeGen());
+	assert(no_word == "");
+	assert(no_offset == -1);
 }
 
 // Listing 7.1 Creating and displaying a map, along with some one liners considered in the text
@@ -141,13 +141,8 @@ void full_game()
 	answer_smash(keywords, dictionary);
 }
 
-int main()
+void hard_coded_game()
 {
-	check_properties();
-
-	warm_up();
-	std::cout << "\n\n";
-
 	// Listing 7.3 Using operator [] to populate a map
 	std::map<std::string, std::string> keywords;
 	keywords["char"] = "type for character representation which can be most efficiently processed on the target system";
@@ -165,6 +160,16 @@ int main()
 		{"torch", "lit stick carried in one's hand"},
 	};
 	smashing::simple_answer_smash(keywords, dictionary);
+}
+
+int main()
+{
+	check_properties();
+
+	warm_up();
+	std::cout << "\n\n";
+
+	hard_coded_game();
 
 	full_game();
 }
