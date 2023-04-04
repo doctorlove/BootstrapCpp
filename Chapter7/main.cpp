@@ -1,48 +1,11 @@
 #include <algorithm>
 #include <cassert>
 #include <cctype>
-#include <fstream>
 #include <iostream>
-#include <map>
 #include <string>
 
-// Listing 7.9 Transform a string to lower case
-// Based on https://en.cppreference.com/w/cpp/string/byte/tolower
-std::string str_tolower(std::string s) {
-	std::transform(s.begin(), s.end(), s.begin(),
-		[](unsigned char c) { return std::tolower(c); }
-	);
-	return s;
-}
+#include "Smash.h"
 
-// Listing 7.10 Load a file into a multimap
-std::multimap<std::string, std::string> load_dictionary(const std::string& filename)
-{
-	std::multimap<std::string, std::string> dictionary;
-	std::ifstream infile{ filename };
-	if (infile)
-	{
-		std::string line;
-		while (std::getline(infile, line))
-		{
-			size_t position = line.find(',');
-			if (position != std::string::npos)
-			{
-				std::string key{ line.substr(0, position) };
-				std::string value{ line.substr(position + 1) };
-				key = str_tolower(key);
-				//dictionary.insert({ key, value }); or
-				dictionary.emplace(key, value);
-			}
-		}
-	}
-	else
-	{
-		// report error
-		std::cout << "Failed to open " << filename << '\n';
-	}
-	return dictionary;
-}
 
 // Listing 7.5 Find an overlapping word
 std::pair<std::string, int> find_overlapping_word_v1(std::string word,
@@ -65,52 +28,16 @@ std::pair<std::string, int> find_overlapping_word_v1(std::string word,
 	return std::make_pair("", -1);
 }
 
-// Listing 7.8 Find an overlapping word more efficiently
-std::pair<std::string, int> find_overlapping_word(std::string word,
-	const std::map<std::string, std::string>& dictionary)
+struct FakeGen
 {
-	size_t offset = 1;
-	while (offset < word.size())
-	{
-		auto stem = word.substr(offset);
-		auto [lb, ub] = dictionary.equal_range(stem);
-		if (lb != dictionary.end() &&
-			stem == lb->first.substr(0, stem.size()))
-		{
-			return std::make_pair(lb->first, offset);
-		}
-		++offset;
-	}
-	return std::make_pair("", -1);
-}
-
-#include <concepts>
-#include <random>
-template <std::invocable<> T>
-std::pair<std::string, int> find_overlapping_word_from_dictionary(std::string word,
-	const std::multimap<std::string, std::string>& dictionary, T gen)
-{
-	size_t offset = 1;
-	while (offset < word.size())
-	{
-		auto stem = word.substr(offset);
-		auto [lb, ub] = dictionary.equal_range(stem);
-		if (lb != dictionary.end() &&
-			stem == lb->first.substr(0, stem.size()))
-		{
-			std::vector<std::pair<std::string, std::string>> dest(1); // TODO something better?
-			std::sample(lb, ub, dest.begin(), 1, gen);
-			auto found = dest[0].first;
-			return std::make_pair(found, offset);
-		}
-		++offset;
-	}
-	return std::make_pair("", -1);
-}
-
+	int operator()() { return 0; };
+	static int min() { return 0; }
+	static int max() { return 1; }
+};
 
 void check_properties()
 {
+	using namespace smashing;
 	std::map<std::string, std::string> first{
 		{ "sprint", ""},
 		{ "swim", ""},
@@ -139,6 +66,36 @@ void check_properties()
 	auto [got, offset] = find_overlapping_word("class", {});
 	assert(got == "");
 	assert(offset == -1);
+
+	std::multimap<std::string, std::string> first_2{
+		{ "sprint", ""},
+		{ "swim", ""},
+		{ "torch", ""},
+		{ "assault", ""}
+	};
+	std::multimap<std::string, std::string> second_2{
+		{ "integer", ""},
+		{ "immuatble", ""},
+		{ "class", ""},
+		{ "struct", ""},
+		{ "vector", ""},
+	};
+
+	FakeGen fake;
+	auto [got1_2, offset1_2] = select_overlapping_word_from_dictionary<FakeGen>("sprint", second_2, fake);
+	assert(got1_2 == "integer");
+	auto [got2_2, offset2_2] = select_overlapping_word_from_dictionary("minus", second_2, FakeGen());
+	assert(got2_2 == "struct");
+	auto [got3_2, offset3_2] = select_overlapping_word_from_dictionary("vector", first_2, FakeGen());
+	assert(got3_2 == "torch");
+
+	auto [got4_2, offset4_2] = select_overlapping_word_from_dictionary("class", first_2, FakeGen());
+	assert(got4_2 == "assault");
+	assert(offset4_2 == 2);
+
+	auto [got_2, offset_2] = select_overlapping_word_from_dictionary("class", {}, FakeGen());
+	assert(got_2 == "");
+	assert(offset_2 == -1);
 }
 
 // Listing 7.1 Creating and displaying a map, along with some one liners considered in the text
@@ -175,73 +132,9 @@ void structure_bindings()
 	std::cout << std::boolalpha << next_it->first << " added? " << next_result << " definition: " << it->second << '\n';
 }
 
-// Listing 7.6 Simple answer smash game
-void simple_answer_smash(
-	const std::map<std::string, std::string> &keywords,
-	const std::map<std::string, std::string> &dictionary)
-{
-	for (const auto & [word, definition] : keywords)
-	{
-		auto [second_word, offset] = find_overlapping_word(word, dictionary);
-		std::string second_definition = dictionary.at(second_word);
-		std::cout << definition << "\nAND\n" << second_definition << '\n';
-
-		std::string answer = word.substr(0, offset) + second_word;
-
-		std::string response;
-		std::getline(std::cin, response);
-		if (response == answer)
-		{
-			std::cout << "CORRECT!!!!!!!!!\n";
-		}
-		else
-		{
-			std::cout << answer << '\n';
-		}
-		std::cout << word << ' ' << second_word << "\n\n\n";
-	}
-}
-
-// Listing 7.? Better answer smash game
-void answer_smash(
-	const std::multimap<std::string, std::string>& keywords,
-	const std::multimap<std::string, std::string>& dictionary)
-{
-	std::mt19937 gen{ std::random_device{}() };
-	const int count = 5;
-	std::vector<std::pair<std::string, std::string>> first_words(count);
-	std::sample(keywords.begin(), keywords.end(), first_words.begin(), count, gen);
-	for (const auto& [word, definition] : first_words)
-	{
-		auto [second_word, offset] = find_overlapping_word_from_dictionary(word, dictionary, gen);
-		if (second_word == "" || second_word == word)
-		{
-			std::cout << "couldn't find a match for " << word << '\n';
-			continue; // TODO maybe remove keywords we don't match?
-		}
-		const auto& [lb, ub] = dictionary.equal_range(second_word);
-		std::vector<std::pair<std::string, std::string>> dest(1); // TODO something better? maybe a view?
-		std::sample(lb, ub, dest.begin(), 1, gen);
-		std::string second_definition = dest[0].first;
-		std::cout << definition << "\nAND\n" << second_definition << '\n';
-
-		std::string answer = word.substr(0, offset) + second_word;
-
-		std::string response;
-		std::getline(std::cin, response);
-		if (response == answer)
-		{
-			std::cout << "CORRECT!!!!!!!!!\n";
-		}
-		else
-		{
-			std::cout << answer << '\n';
-		}
-		std::cout << word << ' ' << second_word << "\n\n\n";
-	}
-}
 void full_game()
 {
+	using namespace smashing;
 	// raw strings and  std::filesystem::path. (since C++17)
 	const auto dictionary = load_dictionary(R"(dictionary.csv)");
 	const auto keywords = load_dictionary(R"(keywords.csv)");
@@ -271,7 +164,7 @@ int main()
 		{"tease", "mock, make fun of"},
 		{"torch", "lit stick carried in one's hand"},
 	};
-	simple_answer_smash(keywords, dictionary);
+	smashing::simple_answer_smash(keywords, dictionary);
 
 	full_game();
 }

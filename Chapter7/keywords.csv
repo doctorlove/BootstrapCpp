@@ -19,10 +19,8 @@ continue,Causes the remaining portion of the enclosing for, range-for, while or 
 co_await,suspends a coroutine and returns control to the caller.
 co_return,return statement in a coroutine
 co_yield,yields a value from a coroutine
-default,as the declaration of the catch all case label in a switch statement;
-explicitly-defaulted function definition: as an explicit instruction to the compiler to generate special member function or a comparison operator for a class.
-delete,Destroys object(s) previously allocated by the new expression and
-releases obtained memory area
+default,as the declaration of the catch all case label in a switch statement;as an explicit instruction to the compiler to generate special member function or a comparison operator for a class.
+delete,Destroys object(s) previously allocated by the new expression and releases obtained memory area
 double,floating point type matching IEEE-754 binary64 format if supported.
 dynamic_cast,Safely converts pointers and references to classes up, down, and sideways along the inheritance hierarchy.
 else,if statement, as the declaration of the alternative branch
@@ -56,8 +54,7 @@ static_assert,Performs compile-time assertion checking.
 static_cast,Converts between types using a combination of implicit and user-defined conversions.
 struct,user defined type with public members by default
 switch,Transfers control to one of several statements, depending on the value of a condition.
-template,a family of classes or functions parameterized by one or more
-parameters
+template,a family of classes or functions parameterized by one or more parameters
 this,is a prvalue expression whose value is the address of the implicit object parameter
 thread_local,thread storage duration
 true,boolean literal, not false
