@@ -87,27 +87,24 @@ void smashing::simple_answer_smash(
 	}
 }
 
-// Listing 7.? Better answer smash game
+// Listing 7.12 Better answer smash game
 void smashing::answer_smash(
 	const std::multimap<std::string, std::string>& keywords,
 	const std::multimap<std::string, std::string>& dictionary)
 {
 	std::mt19937 gen{ std::random_device{}() };
 	const int count = 5;
-	std::vector<std::pair<std::string, std::string>> first_words(count);
-	std::sample(keywords.begin(), keywords.end(), first_words.begin(), count, gen);
+	std::vector<std::pair<std::string, std::string>> first_words;
+	std::ranges::sample(keywords, std::back_inserter(first_words), count, gen);
 	for (const auto& [word, definition] : first_words)
 	{
 		auto [second_word, second_definition, offset] = select_overlapping_word_from_dictionary(word, dictionary, gen);
-		if (second_word == "" || second_word == word)
+		if (second_word == "")
 		{
-			std::cout << "couldn't find a match for " << word << '\n';
-			continue; // TODO maybe remove keywords we don't match?
+			continue;
 		}
 		std::cout << definition << "\nAND\n" << second_definition << '\n';
-
 		std::string answer = word.substr(0, offset) + second_word;
-
 		std::string response;
 		std::getline(std::cin, response);
 		if (response == answer)

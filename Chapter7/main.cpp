@@ -30,7 +30,7 @@ std::pair<std::string, int> find_overlapping_word_v1(std::string word,
 
 struct FakeGen
 {
-	int operator()() { return 0; };
+	int operator()() { return 0; }
 	static int min() { return 0; }
 	static int max() { return 1; }
 };
@@ -132,10 +132,10 @@ void structure_bindings()
 	std::cout << std::boolalpha << next_it->first << " added? " << next_result << " definition: " << it->second << '\n';
 }
 
+// Listing 7.15, Proper answer smash game but shown directly in main in the text
 void full_game()
 {
 	using namespace smashing;
-	// raw strings and  std::filesystem::path. (since C++17)
 	const auto dictionary = load_dictionary(R"(dictionary.csv)");
 	const auto keywords = load_dictionary(R"(keywords.csv)");
 	answer_smash(keywords, dictionary);

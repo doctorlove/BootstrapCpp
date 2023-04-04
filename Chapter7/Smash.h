@@ -1,4 +1,6 @@
 #pragma once
+#include <algorithm>
+#include <concepts>
 #include <map>
 #include <random>
 #include <string>
@@ -7,8 +9,8 @@
 
 namespace smashing
 {
-	//template <std::invocable<> T> from #include <concepts> but samp,e checks for us
-	template <typename T>
+	// Listing 7.11 Select a word from a multimap
+	template <std::invocable<> T>
 	std::tuple<std::string, std::string, int> select_overlapping_word_from_dictionary(std::string word,
 		const std::multimap<std::string, std::string>& dictionary, T gen)
 	{
@@ -20,10 +22,10 @@ namespace smashing
 			if (lb != dictionary.end() &&
 				stem == lb->first.substr(0, stem.size()))
 			{
-				std::vector<std::pair<std::string, std::string>> dest;
 				if (lb == ub)
 					return std::make_tuple(lb->first, lb->second, offset);
-				std::sample(lb, ub, std::back_inserter(dest), 1, gen); //since C++17
+				std::vector<std::pair<std::string, std::string>> dest;
+				std::sample(lb, ub, std::back_inserter(dest), 1, gen);
 				auto found = dest[0].first;
 				auto definition = dest[0].second;
 				return std::make_tuple(found, definition, offset);

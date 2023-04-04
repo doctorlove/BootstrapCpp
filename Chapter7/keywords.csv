@@ -4,10 +4,10 @@ asm,Declaration of an inline assembly block
 auto,auto placeholder type specifier
 bitand,alternative operators: as an alternative for &
 bitor,alternative operators: as an alternative for |
-bool,type, capable of holding one of the two values: true or false.,
+bool,type, capable of holding one of the two values: true or false.
 break,Causes the enclosing for, range-for, while or do-while loop or switch statement to terminate.
 char,type for character representation which can be most efficiently processed on the target system
-class,user defined type with private members by default,
+class,user defined type with private members by default
 compl,alternative operators: as an alternative for ~
 concept,declares a named type requirement
 const,defines that the type is constant.
@@ -19,7 +19,7 @@ continue,Causes the remaining portion of the enclosing for, range-for, while or 
 co_await,suspends a coroutine and returns control to the caller.
 co_return,return statement in a coroutine
 co_yield,yields a value from a coroutine
-default,as the declaration of the catch all case label in a switch statement;as an explicit instruction to the compiler to generate special member function or a comparison operator for a class.
+default,as the declaration of the catch all case label in a switch statement; as an explicit instruction to the compiler to generate special member function or a comparison operator for a class.
 delete,Destroys object(s) previously allocated by the new expression and releases obtained memory area
 double,floating point type matching IEEE-754 binary64 format if supported.
 dynamic_cast,Safely converts pointers and references to classes up, down, and sideways along the inheritance hierarchy.
@@ -59,14 +59,12 @@ this,is a prvalue expression whose value is the address of the implicit object p
 thread_local,thread storage duration
 true,boolean literal, not false
 typedef,creates an alias that can be used anywhere in place of a (possibly complex) type name.
-typeid,
-typename,
-union,
-unsigned,
-using,
-virtual,
-void,
-volatile,
-while,
-xor,
-xor_eq,
+typeid,Queries information of a type. Used where the dynamic type of a polymorphic object must be known and for static type identification.
+typename,In the template parameter list of a template declaration, can be used as an alternative to class to declare type template parameters and template template parameters 
+union,a special class type that can hold only one of its non-static data members at a time.
+using,Introduces a name that is defined elsewhere into the declarative region where this declaration appears.
+virtual,specifies that a non-static member function is supports dynamic dispatch
+void,parameter list of a function with no parameters
+while,used to control the flow of execution. First, it checks the condition, if condition matches, statements the following while will be executed.
+xor,alternative operators: as an alternative for ^
+xor_eq,alternative operators: as an alternative for ^=
