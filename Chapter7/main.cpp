@@ -28,11 +28,13 @@ std::pair<std::string, int> find_overlapping_word_v1(std::string word,
 	return std::make_pair("", -1);
 }
 
+// Listing 7.12 A fake generator for testing
 struct FakeGen
 {
-	int operator()() { return 0; }
-	static int min() { return 0; }
-	static int max() { return 1; }
+	using result_type = unsigned;
+	result_type operator()() { return 0; }
+	static constexpr result_type min() { return 0; }
+	static constexpr result_type max() { return 1; }
 };
 
 void check_properties()
@@ -81,8 +83,7 @@ void check_properties()
 		{ "vector", ""},
 	};
 
-	FakeGen fake;
-	auto [word1, definition1, offset1_2] = select_overlapping_word_from_dictionary<FakeGen>("sprint", second_2, fake);
+	auto [word1, definition1, offset1_2] = select_overlapping_word_from_dictionary<FakeGen>("sprint", second_2, FakeGen());
 	assert(word1 == "integer");
 	auto [word2, definition2, offset2_2] = select_overlapping_word_from_dictionary("minus", second_2, FakeGen());
 	assert(word2 == "struct");
