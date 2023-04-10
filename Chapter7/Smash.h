@@ -1,8 +1,5 @@
 #pragma once
-#include <algorithm>
-#include <concepts>
 #include <map>
-#include <random>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -10,22 +7,25 @@
 namespace smashing
 {
 	// Listing 7.11 Select a word from a multimap
-	template <std::invocable<> T>
+	template <typename T>
 	std::tuple<std::string, std::string, int> select_overlapping_word_from_dictionary(std::string word,
-		const std::multimap<std::string, std::string>& dictionary, T gen)
+		const std::multimap<std::string, std::string>& dictionary, T select_function)
 	{
 		size_t offset = 1;
 		while (offset < word.size())
 		{
 			auto stem = word.substr(offset);
-			auto [lb, ub] = dictionary.equal_range(stem);
+			auto lb = dictionary.lower_bound(stem);
+			auto beyond_stem = stem;
+			beyond_stem += ('z' + 1);
+			auto ub = dictionary.upper_bound(beyond_stem);
 			if (lb != dictionary.end() &&
 				stem == lb->first.substr(0, stem.size()))
 			{
 				if (lb == ub)
 					return std::make_tuple(lb->first, lb->second, offset);
 				std::vector<std::pair<std::string, std::string>> dest;
-				std::sample(lb, ub, std::back_inserter(dest), 1, gen);
+				select_function(lb, ub, std::back_inserter(dest));
 				auto found = dest[0].first;
 				auto definition = dest[0].second;
 				return std::make_tuple(found, definition, offset);

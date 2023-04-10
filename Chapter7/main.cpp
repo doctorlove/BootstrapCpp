@@ -28,13 +28,16 @@ std::pair<std::string, int> find_overlapping_word_v1(std::string word,
 	return std::make_pair("", -1);
 }
 
-// Listing 7.12 A fake generator for testing
+// Listing 7.12 A fake generator for testing // TODO did just return 0
 struct FakeGen
 {
+	int x = 0;
 	using result_type = unsigned;
-	result_type operator()() { return 0; }
+	result_type operator()() {
+		return x; 
+	}
 	static constexpr result_type min() { return 0; }
-	static constexpr result_type max() { return 1; }
+	static constexpr result_type max() { return 10; } // TODO hmmm maybe template too?
 };
 
 void check_properties()
@@ -83,20 +86,45 @@ void check_properties()
 		{ "vector", ""},
 	};
 
-	auto [word1, definition1, offset1_2] = select_overlapping_word_from_dictionary<FakeGen>("sprint", second_2, FakeGen());
+	auto select_first = [](auto lb, auto ub, auto dest) {
+		*dest = *lb;
+	};
+	auto [word1, definition1, offset1_2] = select_overlapping_word_from_dictionary("sprint", second_2, select_first);
 	assert(word1 == "integer");
-	auto [word2, definition2, offset2_2] = select_overlapping_word_from_dictionary("minus", second_2, FakeGen());
+	auto [word2, definition2, offset2_2] = select_overlapping_word_from_dictionary("minus", second_2, select_first);
 	assert(word2 == "struct");
-	auto [word3, definition3, offset3_2] = select_overlapping_word_from_dictionary("vector", first_2, FakeGen());
+	auto [word3, definition3, offset3_2] = select_overlapping_word_from_dictionary("vector", first_2, select_first);
 	assert(word3 == "torch");
 
-	auto [word4, definition4, offset4_2] = select_overlapping_word_from_dictionary("class", first_2, FakeGen());
+	auto [word4, definition4, offset4_2] = select_overlapping_word_from_dictionary("class", first_2, select_first);
 	assert(word4 == "assault");
 	assert(offset4 == 2);
 
-	auto [no_word, no_definition, no_offset] = select_overlapping_word_from_dictionary("class", {}, FakeGen());
+	auto [no_word, no_definition, no_offset] = select_overlapping_word_from_dictionary("class", {}, select_first);
 	assert(no_word == "");
 	assert(no_offset == -1);
+
+	std::string word("aaa");
+	auto [g1, d1, o1] = select_overlapping_word_from_dictionary(word,
+		{ {"a", "1"}, {"aaa", "1"}, {"aab", "1"}, {"aabb", "2"}, {"aabc", "2"}, {"abbc", "3"} },
+		select_first);
+	assert(g1 == "aaa");
+	auto [g2, d2, o2] = select_overlapping_word_from_dictionary(word,
+		{ {"a", "1"}, {"aaaa", "1"}, {"aaab", "1"}, {"aaabb", "2"}, {"aaabc", "2"}, {"aabbc", "3"} },
+		select_first);
+	assert(g2 == "aaaa");
+
+	auto select_last = [](auto lb, auto ub, auto dest) {
+		*dest = *(--ub);
+	};
+	auto [g1b, d1b, o1b] = select_overlapping_word_from_dictionary(word,
+		{ {"a", "1"}, {"aaa", "1"}, {"aab", "1"}, {"aabb", "2"}, {"aabc", "2"}, {"abbc", "3"} },
+		select_last);
+	assert(g1b == "aabc");
+	auto [g2b, d2b, o2b] = select_overlapping_word_from_dictionary(word,
+		{ {"a", "1"}, {"aaaa", "1"}, {"aaab", "1"}, {"aaabb", "2"}, {"aaabc", "2"}, {"aabbc", "3"} },
+		select_last);
+	assert(g2b == "aabbc");
 }
 
 // Listing 7.1 Creating and displaying a map, along with some one liners considered in the text
@@ -104,12 +132,14 @@ void warm_up()
 {
 	std::map<std::string, std::string> dictionary;
 	dictionary["assault"] = "physical attack";
-	std::string new_word = dictionary["fictional"]; // inserts "" against fictional
+	std::string new_value = dictionary["fictional"]; // inserts "" against fictional
 	for (auto item : dictionary)
 	{
 		std::cout << item.first << " : " << item.second << '\n';
 	}
+	// Extra ideas considered in the text
 	dictionary["fictional"] = "made up"; // replaces ""
+	// whereas insert tells us if something already exists
 	auto result = dictionary.insert({ "insert", "place inside" });
 	std::cout << std::boolalpha << result.first->first << " added? " << result.second << " definition: " << result.first->second << '\n';
 	auto next_result = dictionary.insert({ "fictional", "not factual" });
@@ -170,7 +200,9 @@ int main()
 	warm_up();
 	std::cout << "\n\n";
 
+	std::cout << "Hard coded game\n\n";
 	hard_coded_game();
 
+	std::cout << "Full game\n\n";
 	full_game();
 }

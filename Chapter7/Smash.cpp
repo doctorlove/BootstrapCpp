@@ -1,5 +1,7 @@
+#include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <random>
 
 #include "Smash.h"
 
@@ -93,12 +95,15 @@ void smashing::answer_smash(
 	const std::multimap<std::string, std::string>& dictionary)
 {
 	std::mt19937 gen{ std::random_device{}() };
+	auto select_one = [&gen](auto lb, auto ub, auto dest) {
+		std::sample(lb, ub, dest, 1, gen);
+	};
 	const int count = 5;
 	std::vector<std::pair<std::string, std::string>> first_words;
 	std::ranges::sample(keywords, std::back_inserter(first_words), count, gen);
 	for (const auto& [word, definition] : first_words)
 	{
-		auto [second_word, second_definition, offset] = select_overlapping_word_from_dictionary(word, dictionary, gen);
+		auto [second_word, second_definition, offset] = select_overlapping_word_from_dictionary(word, dictionary, select_one);
 		if (second_word == "")
 		{
 			continue;
