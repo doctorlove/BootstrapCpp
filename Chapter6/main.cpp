@@ -18,12 +18,12 @@ void check_properties()
     static_assert(!std::is_constructible<Race::Blob>::value); // 0 for ABC
     // alternatively use _v instead of ::value
     static_assert(!std::is_constructible_v<Race::Blob>); // 0 for ABC
-    static_assert(std::is_destructible_v<Race::Blob>);
-    static_assert(std::has_virtual_destructor_v<Race::Blob>);
+    static_assert( std::is_destructible_v<Race::Blob>);
     static_assert(!std::is_copy_constructible_v<Race::Blob>);
-    static_assert(std::is_copy_assignable_v<Race::Blob>);
-    static_assert(!std::is_move_constructible_v<Race::Blob>); // DOES NOT MEAN WE HAVE A MOVE CONSTRUCTOR, cos copy and be used instead
-    static_assert(std::is_move_assignable_v<Race::Blob>);// DOES NOT MEAN WE HAVE MOVE ASSIGNMENT, cos copy and be used instead
+    static_assert(!std::is_copy_assignable_v<Race::Blob>);
+    static_assert(!std::is_move_constructible_v<Race::Blob>);
+    static_assert(!std::is_move_assignable_v<Race::Blob>);
+    static_assert( std::has_virtual_destructor_v<Race::Blob>);
 
     std::random_device rd;
     Race::RandomBlob rnd_blob{ 
@@ -41,7 +41,7 @@ void check_properties()
     assert(another_rnd_blob.total_steps() >= 0);
 
     // Listing 6.12 Testing with random generators and distributions
-    Race::RandomBlob random_blob([]() { return 0; }, [](auto x) { return x(); });
+    Race::RandomBlob random_blob([]() { return 0; }, [](auto gen) { return gen(); });
     random_blob.step();
     assert(random_blob.total_steps() == 0);
 }
@@ -50,6 +50,7 @@ void check_properties()
 void race_steppers()
 {
     std::vector<Race::StepperBlob> blobs(4);
+    std::random_device rd;
     const int max = 3;
     for (int i = 0; i < max; ++i)
     {
@@ -64,7 +65,7 @@ std::vector<std::unique_ptr<Race::Blob>> create_blobs(int number)
     using namespace Race;
     std::vector<std::unique_ptr<Blob>> blobs;
     std::random_device rd;
-    for (int i = 0; i < number; ++i)
+    for (int i = 0; i < number/2; ++i)
     {
         blobs.emplace_back(std::make_unique<StepperBlob>());
         blobs.emplace_back(std::make_unique<RandomBlob<std::default_random_engine,
@@ -86,10 +87,11 @@ int main()
     // choose a type of race; either 6.9 (just steppers) or 6.18 (various types)
 
     // Listing 6.9 A warm up race
+    // // Uncomment and comment out 2nd race, if you want
     //std::vector<Race::StepperBlob> blobs(4);
     //Race::race(blobs);
 
     // Listing 6.19 A proper race
-    auto blobs = create_blobs(4);
+    auto blobs = create_blobs(8);
     Race::race(blobs);
 }

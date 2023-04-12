@@ -1,5 +1,5 @@
 #include <chrono>
-// If are using gcc 12 or earlier or clang 15 or earlier you need to clone Howard Hinnat's library for the parse method and use it's date.h
+// If are using gcc 12 or earlier or clang 15 or earlier you need to clone Howard Hinnant's library for the parse method and use it's date.h
 // git clone https://github.com/HowardHinnant/date
 // If you get errors with operator<<, you also need to use the date.h from this library
 // Also, add 
@@ -252,9 +252,9 @@ int main()
         // You need a curllib and to include the tz.cpp from the src folder in your date clone
         // So the build command will be along the line of
         // clang++ --std=c++20 main..cpp -o ./main..out
-        //    /mnt/d/dev/date/src/tz.cpp
+        //    /dev/date/src/tz.cpp
         //    -Wall -I/mnt/d/dev/date/include
-        //    -I/mnt/d/dev/date/include
+        //    -I/dev/date/include
         //    -lcurl
         auto local_dur = countdown_in_local_time(system_clock::now(), event_date.value());
         std::cout << duration_cast<hours>(local_dur) <<

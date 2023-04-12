@@ -11,6 +11,11 @@ namespace Race
     {
     public:
         virtual ~Blob() = default;
+
+        Blob() = default;
+        Blob(Blob const&) = delete;
+        Blob& operator=(Blob const&) = delete;
+
         virtual void step() = 0;
         virtual int total_steps() const = 0;
     };

@@ -14,9 +14,13 @@ void Race::draw_blobs(const std::vector<Race::StepperBlob>& blobs)
         for (const auto& blob : blobs)
         {
             if (blob.total_steps() >= y)
+            {
                 output += "* ";
+            }
             else
+            {
                 output += "  ";
+            }
         }
         output += y >= bag_height ? ' ' : '|';
         std::cout << output << '\n';
@@ -38,6 +42,7 @@ void Race::race(std::vector<Race::StepperBlob>& blobs)
 {
     using namespace std::chrono;
     const int max = 3;
+    std::cout << "\x1B[2J\x1B[H";
     for (int i = 0; i < max; ++i)
     {
         draw_blobs(blobs);
@@ -53,6 +58,7 @@ void Race::race(std::vector<std::unique_ptr<Blob>>& blobs)
 {
     using namespace std::chrono;
     const int max = 3;
+    std::cout << "\x1B[2J\x1B[H";
     for (int i = 0; i < max; ++i)
     {
         draw_blobs(blobs);
