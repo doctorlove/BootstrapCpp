@@ -18,6 +18,8 @@ void check_properties()
     static_assert(!std::is_constructible<Race::Blob>::value); // 0 for ABC
     // alternatively use _v instead of ::value
     static_assert(!std::is_constructible_v<Race::Blob>); // 0 for ABC
+    // or is_default_constructible_v
+    static_assert(!std::is_default_constructible_v<Race::Blob>); // 0 for ABC
     static_assert( std::is_destructible_v<Race::Blob>);
     static_assert(!std::is_copy_constructible_v<Race::Blob>);
     static_assert(!std::is_copy_assignable_v<Race::Blob>);
