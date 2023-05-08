@@ -165,6 +165,10 @@ void check_properties()
     // No bucket clashes
     std::unordered_map<std::tuple<int, int, int>, state_value_t> history = initial_state();
     // assert(history.size() == history.bucket_count()); TODO fails on g++-12
+    for (size_t bucket = 0; bucket < history.bucket_count(); bucket++)
+    {
+        assert(history.bucket_size(bucket) <= 1);
+    }
 
     {
         MindReader mr([]() { return 0; }, [](auto gen) { return gen(); });
