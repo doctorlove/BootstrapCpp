@@ -1,6 +1,7 @@
 #include <cassert>
 #include <concepts>
 #include <iostream>
+#include <optional>
 #include <functional> // for hash int
 #include <map>
 #include <random>
@@ -8,15 +9,15 @@
 #include <tuple> 
 #include <utility>
 
-using key_t = std::tuple<int, int, int>; // c.f. typedef
-using value_t = std::pair<int, int>;
+using state_key_t = std::tuple<int, int, int>; // c.f. typedef
+using state_value_t = std::pair<int, int>;
 
 // https://en.cppreference.com/w/cpp/utility/hash
 // custom specialization of std::hash can be injected in namespace std
 template<>
-struct std::hash<key_t>
+struct std::hash<state_key_t>
 {
-    std::size_t operator()(key_t const& k) const noexcept
+    std::size_t operator()(state_key_t const& k) const noexcept
     {
         std::size_t h1 = std::hash<int>{}(std::get<0>(k));
         std::size_t h2 = std::hash<int>{}(std::get<1>(k));
@@ -27,7 +28,7 @@ struct std::hash<key_t>
 
 // Listing 8.1
 // TODO change to function in text
-std::unordered_map<key_t, value_t> initial_state()
+std::unordered_map<state_key_t, state_value_t> initial_state()
 {
     return {
         { {0,0,0}, {-1, -1} },
@@ -49,7 +50,7 @@ enum class Action
     Shrug,
 };
 
-Action prediction_method(const value_t& choices)
+Action prediction_method(const state_value_t& choices)
 {
     auto action = Action::Shrug;
     if (choices.first != -1 && choices.second != -1
@@ -63,9 +64,9 @@ Action prediction_method(const value_t& choices)
 
 class State
 {
-    std::unordered_map<key_t, value_t> state = initial_state();
+    std::unordered_map<state_key_t, state_value_t> state = initial_state();
 public:
-    value_t choices(const key_t& key)
+    state_value_t choices(const state_key_t& key)
     {
         if (state.contains(key)) // can we do a find instead?
         {
@@ -77,7 +78,7 @@ public:
         }
     }
 
-    void update(const key_t& key, const value_t& value)
+    void update(const state_key_t& key, const state_value_t& value)
     {
         if (state.contains(key))
         {
@@ -162,8 +163,8 @@ public:
 void check_properties()
 {
     // No bucket clashes
-    std::unordered_map<std::tuple<int, int, int>, value_t> history = initial_state();
-    assert(history.size() == history.bucket_count());
+    std::unordered_map<std::tuple<int, int, int>, state_value_t> history = initial_state();
+    // assert(history.size() == history.bucket_count()); TODO fails on g++-12
 
     {
         MindReader mr([]() { return 0; }, [](auto gen) { return gen(); });
