@@ -23,12 +23,12 @@ namespace smashing
 				stem == lb->first.substr(0, stem.size()))
 			{
 				if (lb == ub)
-					return std::make_tuple(lb->first, lb->second, offset);
+					return { lb->first, lb->second, offset };
 				std::vector<std::pair<std::string, std::string>> dest;
 				select_function(lb, ub, std::back_inserter(dest));
 				auto found = dest[0].first;
 				auto definition = dest[0].second;
-				return std::make_tuple(found, definition, offset);
+				return { found, definition, offset };
 			}
 			++offset;
 		}

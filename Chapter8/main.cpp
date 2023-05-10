@@ -2,18 +2,18 @@
 #include <concepts>
 #include <iostream>
 #include <optional>
-#include <functional> // for hash int
+#include <functional>
 #include <map>
 #include <random>
 #include <string>
 #include <tuple> 
+#include <unordered_map>
 #include <utility>
 
-using state_key_t = std::tuple<int, int, int>; // c.f. typedef
+using state_key_t = std::tuple<int, int, int>;
 using state_value_t = std::pair<int, int>;
 
-// https://en.cppreference.com/w/cpp/utility/hash
-// custom specialization of std::hash can be injected in namespace std
+// Listing 8.2 Specializing std::hash for a tuple of 3 ints
 template<>
 struct std::hash<state_key_t>
 {
@@ -26,8 +26,7 @@ struct std::hash<state_key_t>
     }
 };
 
-// Listing 8.1
-// TODO change to function in text
+// Listing 8.3 A state table
 std::unordered_map<state_key_t, state_value_t> initial_state()
 {
     return {
@@ -42,7 +41,7 @@ std::unordered_map<state_key_t, state_value_t> initial_state()
     };
 }
 
-
+// Listing 8.5 Three possible actions
 enum class Action
 {
     Same,
@@ -159,15 +158,14 @@ public:
     }
 };
 
-
+// Listing 8.4 Check we have no hash collisions
 void check_properties()
 {
     // No bucket clashes
-    std::unordered_map<std::tuple<int, int, int>, state_value_t> history = initial_state();
-    // assert(history.size() == history.bucket_count()); TODO fails on g++-12
-    for (size_t bucket = 0; bucket < history.bucket_count(); bucket++)
+    std::unordered_map<state_key_t, state_value_t> states = initial_state();
+    for (size_t bucket = 0; bucket < states.bucket_count(); bucket++)
     {
-        assert(history.bucket_size(bucket) <= 1);
+        assert(states.bucket_size(bucket) <= 1);
     }
 
     {
@@ -201,14 +199,14 @@ void check_properties()
         // Listing 6.12 had a RandomBlob we tested
         // This always returns 0
         MindReader mr([]() { return 0; }, [](auto gen) { return gen(); });
-        assert(mr.update(0)); //flip first two goes
-        assert(mr.update(0)); //flip first two goes
+        assert( mr.update(0)); //flip first two goes
+        assert( mr.update(0)); //flip first two goes
         // The random generator always returns zero
         // it guesses first
         // state is 
         // lose, same, lose
         // but without two matching next choices
-        assert(mr.update(0));
+        assert( mr.update(0));
         // now 
         // lose, same, lose -> -1 ,lose
         // so when we decide 0 it stops guessing
@@ -216,15 +214,15 @@ void check_properties()
         // lose, same, lose -> lose ,lose
         // so it will predict a 0 next
         assert(!mr.update(0));
-        assert(mr.get_prediction() == 0);
+        assert( mr.get_prediction() == 0);
         assert(!mr.update(0));
-        assert(mr.get_prediction() == 0);
+        assert( mr.get_prediction() == 0);
         assert(!mr.update(0));
-        assert(mr.get_prediction() == 0);
+        assert( mr.get_prediction() == 0);
         assert(!mr.update(0));
-        assert(mr.get_prediction() == 0);
+        assert( mr.get_prediction() == 0);
         assert(!mr.update(0));
-        assert(mr.get_prediction() == 0);
+        assert( mr.get_prediction() == 0);
     }
 }
 
@@ -281,34 +279,31 @@ void mind_reader()
     int player_wins = 0;
     int guessing = 0;
 
-    std::cout << "Select 0 or 1 at random and press enter.\n";
-    std::cout << "If the computer predicts your guess it wins\nand it can now read your mind.\n";
-
     std::mt19937 gen{ std::random_device{}() };
     std::uniform_int_distribution dist{ 0, 1 };
-
     MindReader mr(gen, dist);
+
+    std::cout << "Select 0 or 1 at random and press enter.\n";
+    std::cout << "If the computer predicts your guess it wins\n";
+    std::cout << "and it can now read your mind.\n";
     while (true)
     {
+        int prediction = mr.get_prediction();
+
         auto input = read_number(std::cin);
         if (!input)
         {
             break;
         }
-        ++turns;
         int player_choice = input.value();
 
-        int prediction = mr.get_prediction();
-        std::cout << "You pressed " << player_choice << ", I guessed " << prediction << '\n';
+        ++turns;
+        std::cout << "You pressed " << player_choice 
+            << ", I guessed " << prediction << '\n';
 
         if (player_choice != prediction)
         {
-            std::cout << " YOU WIN!\n";
             ++player_wins;
-        }
-        else
-        {
-            std::cout << " I WIN!\n";
         }
         if (mr.update(player_choice))
         {
@@ -320,10 +315,10 @@ void mind_reader()
         << "machine won " << (turns - player_wins) << '\n';
 }
 
-
 int main()
 {
-    pennies_game();
     check_properties();
+
+    pennies_game();
     mind_reader();
 }
