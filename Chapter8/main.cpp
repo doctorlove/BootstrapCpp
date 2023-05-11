@@ -67,7 +67,7 @@ class State
 public:
     state_value_t choices(const state_key_t& key)
     {
-        if (state.contains(key)) // can we do a find instead?
+        if (state.contains(key)) // Introduced in C++20: we can use find instead
         {
             return state[key];
         }
