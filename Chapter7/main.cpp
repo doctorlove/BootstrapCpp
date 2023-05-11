@@ -131,9 +131,9 @@ void check_properties()
 void warm_up()
 {
 	std::map<std::string, std::string> dictionary;
-	dictionary["assault"] = "physical attack";
+	dictionary["assume"] = "take for granted, take to be the case";
 	std::string new_value = dictionary["fictional"]; // inserts "" against fictional
-	for (auto item : dictionary)
+	for (const auto & item : dictionary)
 	{
 		std::cout << item.first << " : " << item.second << '\n';
 	}
@@ -150,9 +150,9 @@ void warm_up()
 void structure_bindings()
 {
 	std::map<std::string, std::string> dictionary;
-	dictionary["assault"] = "physical attack";
+	dictionary["assume"] = "take for granted, take to be the case";
 	std::string new_word = dictionary["fictional"];
-	for (auto [key, value] : dictionary)
+	for (const auto & [key, value] : dictionary)
 	{
 		std::cout << key << " : " << value << '\n';
 	}
@@ -172,20 +172,21 @@ void full_game()
 	answer_smash(keywords, dictionary);
 }
 
+// Listing 7.7 Play the first version of answer smash
 void hard_coded_game()
 {
-	// Listing 7.3 Using operator [] to populate a map
-	std::map<std::string, std::string> keywords;
-	keywords["char"] = "type for character representation which can be most efficiently processed on the target system";
-	keywords["class"] = "user defined type with private members by default";
-	keywords["struct"] = "user defined type with public members by default";
-	keywords["vector"] = "sequential container supporting dynamic resizing";
-	keywords["template"] = "used for generic code";
+	const std::map<std::string, std::string> keywords{
+		{"char", "type for character representation which can be most"
+				"efficiently processed on the target system"},
+		{"class", "user defined type with private members by default"},
+		{"struct", "user defined type with public members by default"},
+		{"vector", "sequential container supporting dynamic resizing"},
+		{"template", "used for generic code"},
+	};
 
-	// Listing 7.4 Using initializer lists to populate a map
 	const std::map<std::string, std::string> dictionary{
-		{"assault", "physical attack" },
-		{"harsh", "coarse, large - grained or rough to the touch" },
+		{"assume", "take for granted, take to be the case"},
+		{"harsh", "coarse, large - grained or rough to the touch"},
 		{"table", "piece of furniture"},
 		{"tease", "mock, make fun of"},
 		{"torch", "lit stick carried in one's hand"},
