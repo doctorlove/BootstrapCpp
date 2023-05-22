@@ -9,7 +9,8 @@ namespace smashing
 	// Listing 7.11 Select a word from a multimap
 	template <typename T>
 	std::tuple<std::string, std::string, int> select_overlapping_word_from_dictionary(std::string word,
-		const std::multimap<std::string, std::string>& dictionary, T select_function)
+		const std::multimap<std::string, std::string>& dictionary,
+		T select_function)
 	{
 		size_t offset = 1;
 		while (offset < word.size())
@@ -19,11 +20,9 @@ namespace smashing
 			auto beyond_stem = stem;
 			beyond_stem += ('z' + 1);
 			auto ub = dictionary.upper_bound(beyond_stem);
-			if (lb != dictionary.end() &&
-				stem == lb->first.substr(0, stem.size()))
+			if (lb != dictionary.end() && 
+				lb != ub)
 			{
-				if (lb == ub)
-					return { lb->first, lb->second, offset };
 				std::vector<std::pair<std::string, std::string>> dest;
 				select_function(lb, ub, std::back_inserter(dest));
 				auto found = dest[0].first;
@@ -32,7 +31,7 @@ namespace smashing
 			}
 			++offset;
 		}
-		return std::make_tuple("", "",  - 1);
+		return { "", "",  -1 };
 	}
 
 	std::pair<std::string, int> find_overlapping_word(std::string word,

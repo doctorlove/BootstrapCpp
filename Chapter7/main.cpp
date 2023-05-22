@@ -181,7 +181,7 @@ void hard_coded_game()
 		{"class", "user defined type with private members by default"},
 		{"struct", "user defined type with public members by default"},
 		{"vector", "sequential container supporting dynamic resizing"},
-		{"template", "used for generic code"},
+		{"template", "family of classes or functions parameterized by one or more parameters"},
 	};
 
 	const std::map<std::string, std::string> dictionary{

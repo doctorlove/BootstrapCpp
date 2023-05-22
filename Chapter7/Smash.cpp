@@ -33,6 +33,10 @@ std::multimap<std::string, std::string> smashing::load_dictionary(const std::str
 				//dictionary.insert({ key, value }); or
 				dictionary.emplace(key, value);
 			}
+			else
+			{
+				std::cout << "***Invalid line\n" << line << "\nin " << filename << "***\n\n";
+			}
 		}
 	}
 	else
@@ -55,12 +59,16 @@ std::pair<std::string, int> smashing::find_overlapping_word(std::string word,
 		if (lb != dictionary.end() &&
 			stem == lb->first.substr(0, stem.size()))
 		{
-			return std::make_pair(lb->first, offset);
+			return { lb->first, offset };
 		}
 		++offset;
 	}
-	return std::make_pair("", -1);
+	return { "", -1 };
 }
+
+// Could use 
+//#include <format>
+//#include <string_view>
 
 // Listing 7.6 Simple answer smash game
 void smashing::simple_answer_smash(
@@ -70,10 +78,17 @@ void smashing::simple_answer_smash(
 	for (const auto& [word, definition] : keywords)
 	{
 		auto [second_word, offset] = find_overlapping_word(word, dictionary);
+		if (offset == -1)
+		{
+			std::cout << "Not match for " << word << '\n';
+			continue;
+		}
 		std::string second_definition = dictionary.at(second_word);
 		std::cout << definition << "\nAND\n" << second_definition << '\n';
 
 		std::string answer = word.substr(0, offset) + second_word;
+		// Or more efficiently,
+		//std::string answer = std::format("{}{}", std::string_view(word).substr(0, offset), second_word);
 
 		std::string response;
 		std::getline(std::cin, response);
