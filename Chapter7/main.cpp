@@ -186,7 +186,7 @@ void hard_coded_game()
 
 	const std::map<std::string, std::string> dictionary{
 		{"assume", "take for granted, take to be the case"},
-		{"harsh", "coarse, large - grained or rough to the touch"},
+		{"harsh", "coarse, large-grained or rough to the touch"},
 		{"table", "piece of furniture"},
 		{"tease", "mock, make fun of"},
 		{"torch", "lit stick carried in one's hand"},
@@ -198,6 +198,7 @@ int main()
 {
 	check_properties();
 
+	std::cout << "Warm up\n\n";
 	warm_up();
 	std::cout << "\n\n";
 
