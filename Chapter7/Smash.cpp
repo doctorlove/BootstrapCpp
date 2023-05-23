@@ -104,7 +104,7 @@ void smashing::simple_answer_smash(
 	}
 }
 
-// Listing 7.12 Better answer smash game
+// Listing 7.14 Better answer smash game
 void smashing::answer_smash(
 	const std::multimap<std::string, std::string>& keywords,
 	const std::multimap<std::string, std::string>& dictionary)
@@ -127,7 +127,7 @@ void smashing::answer_smash(
 		std::string answer = word.substr(0, offset) + second_word;
 		std::string response;
 		std::getline(std::cin, response);
-		if (response == answer)
+		if (str_tolower(response) == answer)
 		{
 			std::cout << "CORRECT!!!!!!!!!\n";
 		}

@@ -28,18 +28,7 @@ std::pair<std::string, int> find_overlapping_word_v1(std::string word,
 	return std::make_pair("", -1);
 }
 
-// Listing 7.12 A fake generator for testing // TODO did just return 0
-struct FakeGen
-{
-	int x = 0;
-	using result_type = unsigned;
-	result_type operator()() {
-		return x; 
-	}
-	static constexpr result_type min() { return 0; }
-	static constexpr result_type max() { return 10; } // TODO hmmm maybe template too?
-};
-
+// Listing 7.13 Test properties
 void check_properties()
 {
 	using namespace smashing;
@@ -86,6 +75,7 @@ void check_properties()
 		{ "vector", ""},
 	};
 
+	// Listing 7.12 A fake generator for testing
 	auto select_first = [](auto lb, auto ub, auto dest) {
 		*dest = *lb;
 	};
