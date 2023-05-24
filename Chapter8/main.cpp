@@ -11,7 +11,7 @@
 #include <utility>
 
 
-// Listing 8.5 Three possible choices
+// Listing 8.3 Three possible choices
 enum class Choice
 {
     Same,
@@ -22,23 +22,23 @@ enum class Choice
 using state_t = std::tuple<int, Choice, int>;
 using last_choices_t = std::pair<Choice, Choice>;
 
-// Listing 8.2 Specializing std::hash for a tuple of 3 ints
+// Listing 8.5 Specializing std::hash for our state tuple
 template<>
 struct std::hash<state_t>
 {
-    std::size_t operator()(state_t const& k) const noexcept
+    std::size_t operator()(state_t const& state) const noexcept
     {
-        std::size_t h1 = std::hash<int>{}(std::get<0>(k));
-        std::size_t h2 = std::hash<Choice>{}(std::get<1>(k));
-        std::size_t h3 = std::hash<int>{}(std::get<2>(k));
+        std::size_t h1 = std::hash<int>{}(std::get<0>(state));
+        std::size_t h2 = std::hash<Choice>{}(std::get<1>(state));
+        std::size_t h3 = std::hash<int>{}(std::get<2>(state));
         return h1 ^ (h2 << 1) ^ (h3 << 2); // or use boost::hash_combine
     }
 };
 
-// Listing 8.3 A state table
+// Listing 8.6 An initial state table
 std::unordered_map<state_t, last_choices_t> initial_state()
 {
-    const auto unset = std::pair<Choice, Choice>{ Choice::Shrug , Choice::Shrug };
+    const auto unset = std::pair<Choice, Choice>{ Choice::Shrug, Choice::Shrug };
     return {
         { {0,Choice::Same,0}, unset },
         { {0,Choice::Same,1}, unset },
@@ -51,7 +51,7 @@ std::unordered_map<state_t, last_choices_t> initial_state()
     };
 }
 
-// Listing 8.6 Choice from state TODO changed and listing number changed
+// Listing 8.8 Choice from state
 Choice prediction_method(const last_choices_t& choices)
 {
     if (choices.first == choices.second)
@@ -60,19 +60,20 @@ Choice prediction_method(const last_choices_t& choices)
     }
     else
     {
-        return Choice::Shrug;;
+        return Choice::Shrug;
     }
 }
-
+// Listing 8.9 Class to track the game's state
 class State
 {
     std::unordered_map<state_t, last_choices_t> state = initial_state();
 public:
+    // Listing 8.10 Find the choices or return two shrugs
     last_choices_t choices(const state_t& key)
     {
-        if (state.contains(key)) // Introduced in C++20: we can use find instead
+        if (auto it = state.find(key); it!=state.end())
         {
-            return state[key];
+            return it->second;
         }
         else
         {
@@ -82,20 +83,12 @@ public:
 
     void update(const state_t& key, const Choice turn_changed)
     {
-        if (state.contains(key))
+        if (std::get<2>(key) != -1)
         {
             const auto [prev2, prev1] = choices(key);
             last_choices_t value{ prev1, turn_changed };
-            if (std::get<1>(key) != Choice::Shrug) // might not need to check this rest but this is fragile
-            {
-                state[key] = value;
-            }
+            state[key] = value;
         }
-        //else // TODO talk about this
-        //{
-        //    std::cout << "No such key " << std::get<0>(key) << std::get<1>(key) << std::get<2>(key) << "\n";
-        //    //    throw std::invalid_argument("key invalid"); // first couple of goes will have -1s in
-        //}
     }
 };
 
@@ -160,7 +153,7 @@ public:
     }
 };
 
-// Listing 8.4 Check we have no hash collisions
+// Listing 8.7 Check we have no hash collisions (and more besides)
 void check_properties()
 {
     // No bucket clashes
