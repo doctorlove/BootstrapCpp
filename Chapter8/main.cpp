@@ -10,62 +10,65 @@
 #include <unordered_map>
 #include <utility>
 
-using state_key_t = std::tuple<int, int, int>;
-using state_value_t = std::pair<int, int>;
 
-// Listing 8.2 Specializing std::hash for a tuple of 3 ints
-template<>
-struct std::hash<state_key_t>
-{
-    std::size_t operator()(state_key_t const& k) const noexcept
-    {
-        std::size_t h1 = std::hash<int>{}(std::get<0>(k));
-        std::size_t h2 = std::hash<int>{}(std::get<1>(k));
-        std::size_t h3 = std::hash<int>{}(std::get<2>(k));
-        return h1 ^ (h2 << 1) ^ (h3 << 2); // or use boost::hash_combine
-    }
-};
-
-// Listing 8.3 A state table
-std::unordered_map<state_key_t, state_value_t> initial_state()
-{
-    return {
-        { {0,0,0}, {-1, -1} },
-        { {0,0,1}, {-1, -1} },
-        { {0,1,0}, {-1, -1} },
-        { {0,1,1}, {-1, -1} },
-        { {1,0,0}, {-1, -1} },
-        { {1,0,1}, {-1, -1} },
-        { {1,1,0}, {-1, -1} },
-        { {1,1,1}, {-1, -1} },
-    };
-}
-
-// Listing 8.5 Three possible actions
-enum class Action
+// Listing 8.5 Three possible choices
+enum class Choice
 {
     Same,
     Change,
     Shrug,
 };
 
-Action prediction_method(const state_value_t& choices)
-{
-    auto action = Action::Shrug;
-    if (choices.first != -1 && choices.second != -1
-        && choices.first == choices.second)
-    {
-        action = choices.first ? Action::Change : Action::Same;
-    }
+using state_t = std::tuple<int, Choice, int>;
+using last_choices_t = std::pair<Choice, Choice>;
 
-    return action;
+// Listing 8.2 Specializing std::hash for a tuple of 3 ints
+template<>
+struct std::hash<state_t>
+{
+    std::size_t operator()(state_t const& k) const noexcept
+    {
+        std::size_t h1 = std::hash<int>{}(std::get<0>(k));
+        std::size_t h2 = std::hash<Choice>{}(std::get<1>(k));
+        std::size_t h3 = std::hash<int>{}(std::get<2>(k));
+        return h1 ^ (h2 << 1) ^ (h3 << 2); // or use boost::hash_combine
+    }
+};
+
+// Listing 8.3 A state table
+std::unordered_map<state_t, last_choices_t> initial_state()
+{
+    const auto unset = std::pair<Choice, Choice>{ Choice::Shrug , Choice::Shrug };
+    return {
+        { {0,Choice::Same,0}, unset },
+        { {0,Choice::Same,1}, unset },
+        { {0,Choice::Change,0}, unset },
+        { {0,Choice::Change,1}, unset },
+        { {1,Choice::Same,0}, unset },
+        { {1,Choice::Same,1}, unset },
+        { {1,Choice::Change,0}, unset },
+        { {1,Choice::Change,1}, unset },
+    };
+}
+
+// Listing 8.6 Choice from state TODO changed and listing number changed
+Choice prediction_method(const last_choices_t& choices)
+{
+    if (choices.first == choices.second)
+    {
+        return choices.first;
+    }
+    else
+    {
+        return Choice::Shrug;;
+    }
 }
 
 class State
 {
-    std::unordered_map<state_key_t, state_value_t> state = initial_state();
+    std::unordered_map<state_t, last_choices_t> state = initial_state();
 public:
-    state_value_t choices(const state_key_t& key)
+    last_choices_t choices(const state_t& key)
     {
         if (state.contains(key)) // Introduced in C++20: we can use find instead
         {
@@ -73,15 +76,17 @@ public:
         }
         else
         {
-            return { -1, -1 };
+            return { Choice::Shrug, Choice::Shrug };
         }
     }
 
-    void update(const state_key_t& key, const state_value_t& value)
+    void update(const state_t& key, const Choice turn_changed)
     {
         if (state.contains(key))
         {
-            if (std::get<0>(key) != -1) // might not need to check this rest but this is fragile
+            const auto [prev2, prev1] = choices(key);
+            last_choices_t value{ prev1, turn_changed };
+            if (std::get<1>(key) != Choice::Shrug) // might not need to check this rest but this is fragile
             {
                 state[key] = value;
             }
@@ -106,7 +111,7 @@ class MindReader {
     int previous1 = -1;
     int previous_go = -1;
 
-    int previous_turn_changed = -1;
+    Choice previous_turn_changed = Choice::Shrug;
 
 public:
     MindReader(T gen, U dis)
@@ -122,15 +127,12 @@ public:
     bool update(int player_choice)
     {
         bool guessing = false;
-        const int turn_changed = player_choice != previous_go;
+        const Choice turn_changed = player_choice == previous_go ? Choice::Same : Choice::Change;
         previous_go = player_choice;
 
+        state_table.update({ previous2, previous_turn_changed, previous1 }, turn_changed);
+
         const bool player_won_this_turn = player_choice != prediction;
-
-        // two lines not very encapsulated
-        const auto [prev2, prev1] = state_table.choices({ previous2, previous_turn_changed, previous1 });
-        state_table.update({ previous2, previous_turn_changed, previous1 }, { prev1, turn_changed });
-
         previous2 = previous1;
         previous_turn_changed = turn_changed;
         previous1 = player_won_this_turn;
@@ -138,14 +140,14 @@ public:
         auto option = prediction_method(state_table.choices({ previous2, previous_turn_changed, previous1 }));
         switch (option)
         {
-        case Action::Shrug:
+        case Choice::Shrug:
             prediction = flip();
             guessing = true;
             break;
-        case Action::Change:
+        case Choice::Change:
             prediction = player_choice ^ 1;
             break;
-        case Action::Same:
+        case Choice::Same:
             prediction = player_choice;
             break;
         }
@@ -162,7 +164,7 @@ public:
 void check_properties()
 {
     // No bucket clashes
-    std::unordered_map<state_key_t, state_value_t> states = initial_state();
+    std::unordered_map<state_t, last_choices_t> states = initial_state();
     for (size_t bucket = 0; bucket < states.bucket_count(); bucket++)
     {
         assert(states.bucket_size(bucket) <= 1);
@@ -174,26 +176,26 @@ void check_properties()
         assert(mr.update(0)); // second is a guess too
     }
 
-    assert(prediction_method({ -1, -1 }) == Action::Shrug);
-    assert(prediction_method({ -1, 0 }) == Action::Shrug);
-    assert(prediction_method({ -1, 1 }) == Action::Shrug);
-    assert(prediction_method({ 0, -1 }) == Action::Shrug);
-    assert(prediction_method({ 1, -1 }) == Action::Shrug);
-    assert(prediction_method({ 0, 0 }) == Action::Same);
-    assert(prediction_method({ 1, 1 }) == Action::Change);
-    assert(prediction_method({ 0, 1 }) == Action::Shrug);
-    assert(prediction_method({ 1, 0 }) == Action::Shrug);
+    assert(prediction_method({ Choice::Shrug, Choice::Shrug }) == Choice::Shrug);
+    assert(prediction_method({ Choice::Shrug, Choice::Change }) == Choice::Shrug);
+    assert(prediction_method({ Choice::Shrug, Choice::Same }) == Choice::Shrug);
+    assert(prediction_method({ Choice::Change, Choice::Shrug }) == Choice::Shrug);
+    assert(prediction_method({ Choice::Same, Choice::Shrug }) == Choice::Shrug);
+    assert(prediction_method({ Choice::Change, Choice::Change }) == Choice::Change);
+    assert(prediction_method({ Choice::Same, Choice::Same }) == Choice::Same);
+    assert(prediction_method({ Choice::Change, Choice::Same }) == Choice::Shrug);
+    assert(prediction_method({ Choice::Same, Choice::Change }) == Choice::Shrug);
 
     State s;
-    auto got1 = s.choices({ -1, -1, -1 });
-    assert(got1.first == -1);
-    assert(got1.second == -1);
-    auto got2 = s.choices({ 0, 0, -1 });
-    assert(got2.first == -1);
-    assert(got2.second == -1);
-    auto got3 = s.choices({ 1, 1, -1 });
-    assert(got3.first == -1);
-    assert(got3.second == -1);
+    auto got1 = s.choices({ -1, Choice::Shrug, -1 });
+    assert(got1.first == Choice::Shrug);
+    assert(got1.second == Choice::Shrug);
+    auto got2 = s.choices({ 0, Choice::Same, -1 });
+    assert(got2.first == Choice::Shrug);
+    assert(got2.second == Choice::Shrug);
+    auto got3 = s.choices({ 1, Choice::Change, -1 });
+    assert(got3.first == Choice::Shrug);
+    assert(got3.second == Choice::Shrug);
 
     {
         // Listing 6.12 had a RandomBlob we tested
