@@ -11,6 +11,53 @@
 #include <utility>
 
 
+// Listing 8.1 Read an optional zero or one
+std::optional<int> read_number(std::istream& in)
+{
+    std::string line;
+    std::getline(std::cin, line);
+    if (line == "0") {
+        return { 0 };
+    }
+    else if (line == "1") {
+        return { 1 };
+    }
+    return {};
+}
+
+// Listing 8.2 A pennies game
+void pennies_game()
+{
+    int player_wins = 0;
+    int turns = 0;
+    std::mt19937 gen{ std::random_device{}() };
+    std::uniform_int_distribution dist(0, 1);
+
+    std::cout << "Select 0 or 1 at random and press enter.\n";
+    std::cout << "If the computer predicts your guess it wins.\n";
+    while (true)
+    {
+        const int prediction = dist(gen);
+
+        auto input = read_number(std::cin);
+        if (!input)
+        {
+            break;
+        }
+        int player_choice = input.value();
+
+        ++turns;
+        std::cout << "You pressed " << player_choice << ", I guessed " << prediction << '\n';
+
+        if (player_choice != prediction)
+        {
+            ++player_wins;
+        }
+    }
+    std::cout << "you win " << player_wins << '\n'
+        << "I win " << turns - player_wins << '\n';
+}
+
 // Listing 8.3 Three possible choices
 enum class Choice
 {
@@ -66,12 +113,12 @@ Choice prediction_method(const last_choices_t& choices)
 // Listing 8.9 Class to track the game's state
 class State
 {
-    std::unordered_map<state_t, last_choices_t> state = initial_state();
+    std::unordered_map<state_t, last_choices_t> state_lookup = initial_state();
 public:
     // Listing 8.10 Find the choices or return two shrugs
-    last_choices_t choices(const state_t& key)
+    last_choices_t choices(const state_t& key) const
     {
-        if (auto it = state.find(key); it!=state.end())
+        if (auto it = state_lookup.find(key); it!=state_lookup.end())
         {
             return it->second;
         }
@@ -80,18 +127,19 @@ public:
             return { Choice::Shrug, Choice::Shrug };
         }
     }
-
+    // Listing 8.11 Update choices for valid keys
     void update(const state_t& key, const Choice turn_changed)
     {
-        if (std::get<2>(key) != -1)
+        if (auto it = state_lookup.find(key); it != state_lookup.end())
         {
-            const auto [prev2, prev1] = choices(key);
+            const auto [prev2, prev1] = it->second;
             last_choices_t value{ prev1, turn_changed };
-            state[key] = value;
+            state_lookup[key] = value;
         }
     }
 };
 
+// Listing 8.12 A mind reading class
 template <std::invocable<> T, typename U>
 class MindReader {
     State state_table;
@@ -100,11 +148,11 @@ class MindReader {
     U distribution;
 
     int prediction = flip();
-    int previous2 = -1;
-    int previous1 = -1;
-    int previous_go = -1;
 
+    int prev_win_or_loss2 = -1;
     Choice previous_turn_changed = Choice::Shrug;
+    int prev_win_or_loss1 = -1;
+    int previous_go = -1;
 
 public:
     MindReader(T gen, U dis)
@@ -123,14 +171,14 @@ public:
         const Choice turn_changed = player_choice == previous_go ? Choice::Same : Choice::Change;
         previous_go = player_choice;
 
-        state_table.update({ previous2, previous_turn_changed, previous1 }, turn_changed);
+        state_table.update({ prev_win_or_loss2, previous_turn_changed, prev_win_or_loss1 }, turn_changed);
 
         const bool player_won_this_turn = player_choice != prediction;
-        previous2 = previous1;
+        prev_win_or_loss2 = prev_win_or_loss1;
         previous_turn_changed = turn_changed;
-        previous1 = player_won_this_turn;
+        prev_win_or_loss1 = player_won_this_turn;
 
-        auto option = prediction_method(state_table.choices({ previous2, previous_turn_changed, previous1 }));
+        auto option = prediction_method(state_table.choices({ prev_win_or_loss2, previous_turn_changed, prev_win_or_loss1 }));
         switch (option)
         {
         case Choice::Shrug:
@@ -219,53 +267,6 @@ void check_properties()
         assert(!mr.update(0));
         assert( mr.get_prediction() == 0);
     }
-}
-
-// Listing 8.1 Read an optional zero or one
-std::optional<int> read_number(std::istream& in)
-{
-    std::string line;
-    std::getline(std::cin, line);
-    if (line == "0") {
-        return { 0 };
-    }
-    else if (line == "1") {
-        return { 1 };
-    }
-    return {};
-}
-
-// Listing 8.2 A pennies game
-void pennies_game()
-{
-    int player_wins = 0;
-    int turns = 0;
-    std::mt19937 gen{ std::random_device{}() };
-    std::uniform_int_distribution dist(0, 1);
-
-    std::cout << "Select 0 or 1 at random and press enter.\n";
-    std::cout << "If the computer predicts your guess it wins.\n";
-    while (true)
-    {
-        const int prediction = dist(gen);
-
-        auto input = read_number(std::cin);
-        if (!input)
-        {
-            break;
-        }
-        int player_choice = input.value();
-
-        ++turns;
-        std::cout << "You pressed " << player_choice << ", I guessed " << prediction << '\n';
-
-        if (player_choice != prediction)
-        {
-            ++player_wins;
-        }
-    }
-    std::cout << "you win " << player_wins << '\n'
-        << "I win " << turns - player_wins << '\n';
 }
 
 void mind_reader()
