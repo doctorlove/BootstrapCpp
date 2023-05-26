@@ -1,5 +1,6 @@
 #include <cassert>
 #include <concepts>
+#include <coroutine>
 #include <iostream>
 #include <optional>
 #include <functional>
@@ -165,6 +166,7 @@ public:
         return prediction;
     }
 
+    // Listing 8.12 The mind reader's update method
     bool update(int player_choice)
     {
         bool guessing = false;
@@ -269,6 +271,7 @@ void check_properties()
     }
 }
 
+// Listing 8.13 A mind reading game
 void mind_reader()
 {
     int turns = 0;
@@ -311,10 +314,90 @@ void mind_reader()
         << "machine won " << (turns - player_wins) << '\n';
 }
 
+struct Promise {
+    struct promise_type {
+        std::pair<int, int> choice_and_prediction;
+
+        Promise get_return_object() {
+            return {
+              .h_ = std::coroutine_handle<promise_type>::from_promise(*this)
+            };
+        }
+        std::suspend_never initial_suspend() { return {}; }
+        std::suspend_always final_suspend() noexcept { return {}; }
+        void unhandled_exception() {}
+        std::suspend_always yield_value(std::pair<int, int> got) {
+            choice_and_prediction = got;
+            return {};
+        }
+
+        void return_void() // could return something rather than void - changes boilerplate needed
+        {
+        }
+    };
+
+    std::coroutine_handle<promise_type> h_;
+};
+
+// Listing 8.15 Our first coroutine
+Promise coro_mind_reader()
+{
+    std::mt19937 gen{ std::random_device{}() };
+    std::uniform_int_distribution dist{ 0, 1 };
+    MindReader mr(gen, dist);
+    while (true)
+    {
+        auto input = read_number(std::cin);
+        if (!input)
+        {
+            co_return;
+        }
+        int player_choice = input.value();
+        co_yield{ player_choice , mr.get_prediction() }; // We could actually co yield dist(gen) first two callls
+        mr.update(player_choice);
+    }
+}
+
+
+void coroutine_minder_reader()
+{
+    int turns = 0;
+    int player_wins = 0;
+
+    std::cout << "Select 0 or 1 at random and press enter.\n";
+    std::cout << "If the computer predicts your guess it wins\nand it can now read your mind.\n";
+
+    auto h = coro_mind_reader().h_; // gets first input
+    auto& promise = h.promise();
+
+    while (true)
+    {
+        if (h.done())
+        {
+            break;
+        }
+        auto [player_choice, prediction] = promise.choice_and_prediction;
+        ++turns;
+        std::cout << "You pressed " << player_choice << ", I guessed " << prediction << '\n';
+
+        if (player_choice != prediction)
+        {
+            ++player_wins;
+        }
+        h(); // need to avoid calling a "dangling" coroutine
+    }
+    std::cout << "you win " << player_wins << '\n'
+        << "machine won " << (turns - player_wins) << '\n';
+
+    h.destroy(); // TODO RAII would be better
+}
+
 int main()
 {
     check_properties();
 
     pennies_game();
     mind_reader();
+
+    coroutine_minder_reader();
 }
