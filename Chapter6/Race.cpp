@@ -8,9 +8,10 @@
 void Race::draw_blobs(const std::vector<Race::StepperBlob>& blobs)
 {
     const int bag_height = 3;
-    for (int y = 8; y >= 0; --y)
+    const int race_height = 8;
+    for (int y = race_height; y >= 0; --y)
     {
-        std::string output = y > 2 ? "  " : "| ";
+        std::string output = y >= bag_height ? "  " : "| ";
         for (const auto& blob : blobs)
         {
             if (blob.total_steps() >= y)
@@ -25,7 +26,8 @@ void Race::draw_blobs(const std::vector<Race::StepperBlob>& blobs)
         output += y >= bag_height ? ' ' : '|';
         std::cout << output << '\n';
     }
-    std::cout << std::string(blobs.size() * 2 + 3, '-') << '\n';
+    const int edges = 3;
+    std::cout << std::string(blobs.size() * 2 + edges, '-') << '\n';
 }
 
 // Listing 6.7 Move all the blobs

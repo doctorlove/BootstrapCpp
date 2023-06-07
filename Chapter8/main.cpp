@@ -370,12 +370,8 @@ void coroutine_minder_reader()
     auto h = coro_mind_reader().h_; // gets first input
     auto& promise = h.promise();
 
-    while (true)
+    while (!h.done())
     {
-        if (h.done())
-        {
-            break;
-        }
         auto [player_choice, prediction] = promise.choice_and_prediction;
         ++turns;
         std::cout << "You pressed " << player_choice << ", I guessed " << prediction << '\n';
