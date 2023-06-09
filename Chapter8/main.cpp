@@ -314,33 +314,36 @@ void mind_reader()
         << "machine won " << (turns - player_wins) << '\n';
 }
 
-struct Promise {
-    struct promise_type {
+// Listing 8.17 The coroutine's Task and promise_type
+struct Task
+{
+    struct promise_type
+    {
         std::pair<int, int> choice_and_prediction;
 
-        Promise get_return_object() {
+        Task get_return_object()
+        {
             return {
-              .h_ = std::coroutine_handle<promise_type>::from_promise(*this)
+              .handle_ = std::coroutine_handle<promise_type>::from_promise(*this)
             };
         }
-        std::suspend_never initial_suspend() { return {}; }
+        std::suspend_never initial_suspend() noexcept { return {}; }
         std::suspend_always final_suspend() noexcept { return {}; }
         void unhandled_exception() {}
-        std::suspend_always yield_value(std::pair<int, int> got) {
+        std::suspend_always yield_value(std::pair<int, int> got)
+        {
             choice_and_prediction = got;
             return {};
         }
 
-        void return_void() // could return something rather than void - changes boilerplate needed
-        {
-        }
+        void return_void() { }
     };
 
-    std::coroutine_handle<promise_type> h_;
+    std::coroutine_handle<promise_type> handle_;
 };
 
 // Listing 8.15 Our first coroutine
-Promise coro_mind_reader()
+Task coroutine_game()
 {
     std::mt19937 gen{ std::random_device{}() };
     std::uniform_int_distribution dist{ 0, 1 };
@@ -367,8 +370,8 @@ void coroutine_minder_reader()
     std::cout << "Select 0 or 1 at random and press enter.\n";
     std::cout << "If the computer predicts your guess it wins\nand it can now read your mind.\n";
 
-    auto h = coro_mind_reader().h_; // gets first input
-    auto& promise = h.promise();
+    auto h = coroutine_game().handle_; // gets first input
+    auto& promise = h.promise(); // promise hold the data we want
 
     while (!h.done())
     {
@@ -380,7 +383,7 @@ void coroutine_minder_reader()
         {
             ++player_wins;
         }
-        h(); // need to avoid calling a "dangling" coroutine
+        h(); // calls the handle' void operator()() const function
     }
     std::cout << "you win " << player_wins << '\n'
         << "machine won " << (turns - player_wins) << '\n';
