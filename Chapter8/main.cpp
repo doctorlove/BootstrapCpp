@@ -79,7 +79,7 @@ struct std::hash<state_t>
         std::size_t h1 = std::hash<int>{}(std::get<0>(state));
         std::size_t h2 = std::hash<Choice>{}(std::get<1>(state));
         std::size_t h3 = std::hash<int>{}(std::get<2>(state));
-        return h1 ^ (h2 << 1) ^ (h3 << 2); // or use boost::hash_combine
+        return h1 + (h2 << 1) + (h3 << 2);
     }
 };
 
@@ -140,7 +140,7 @@ public:
     }
 };
 
-// Listing 8.12 A mind reading class
+// Listing 8.12 A mind-reading class
 template <std::invocable<> T, typename U>
 class MindReader {
     State state_table;
@@ -166,7 +166,7 @@ public:
         return prediction;
     }
 
-    // Listing 8.12 The mind reader's update method
+    // Listing 8.13 The mind reader's update method
     bool update(int player_choice)
     {
         bool guessing = false;
@@ -210,7 +210,8 @@ void check_properties()
     std::unordered_map<state_t, last_choices_t> states = initial_state();
     for (size_t bucket = 0; bucket < states.bucket_count(); bucket++)
     {
-        assert(states.bucket_size(bucket) <= 1);
+        auto bucket_size = states.bucket_size(bucket);
+        assert(bucket_size <= 1);
     }
 
     {
@@ -271,7 +272,7 @@ void check_properties()
     }
 }
 
-// Listing 8.13 A mind reading game
+// Listing 8.14 A mind reading game
 void mind_reader()
 {
     int turns = 0;
@@ -314,7 +315,7 @@ void mind_reader()
         << "machine won " << (turns - player_wins) << '\n';
 }
 
-// Listing 8.17 The coroutine's Task and promise_type
+// Listing 8.17 and 8.19 The coroutine's Task and promise_type
 struct Task
 {
     struct promise_type
@@ -324,7 +325,7 @@ struct Task
         Task get_return_object()
         {
             return {
-              .handle_ = std::coroutine_handle<promise_type>::from_promise(*this)
+              .handle = std::coroutine_handle<promise_type>::from_promise(*this)
             };
         }
         std::suspend_never initial_suspend() noexcept { return {}; }
@@ -339,10 +340,17 @@ struct Task
         void return_void() { }
     };
 
-    std::coroutine_handle<promise_type> handle_;
+    bool done() { return handle.done(); }
+    std::pair<int, int> choice_and_prediction()
+    {
+        return handle.promise().choice_and_prediction;
+    }
+    void next() { handle(); }
+    ~Task() { handle.destroy(); }
+    std::coroutine_handle<promise_type> handle;
 };
 
-// Listing 8.15 Our first coroutine
+// Listing 8.16 Our first coroutine
 Task coroutine_game()
 {
     std::mt19937 gen{ std::random_device{}() };
@@ -361,7 +369,7 @@ Task coroutine_game()
     }
 }
 
-
+// Listing 8.20 A coroutine version of a mind reader
 void coroutine_minder_reader()
 {
     int turns = 0;
@@ -370,12 +378,11 @@ void coroutine_minder_reader()
     std::cout << "Select 0 or 1 at random and press enter.\n";
     std::cout << "If the computer predicts your guess it wins\nand it can now read your mind.\n";
 
-    auto h = coroutine_game().handle_; // gets first input
-    auto& promise = h.promise(); // promise hold the data we want
+    Task game = coroutine_game();
 
-    while (!h.done())
+    while (!game.done())
     {
-        auto [player_choice, prediction] = promise.choice_and_prediction;
+        auto [player_choice, prediction] = game.choice_and_prediction();
         ++turns;
         std::cout << "You pressed " << player_choice << ", I guessed " << prediction << '\n';
 
@@ -383,12 +390,10 @@ void coroutine_minder_reader()
         {
             ++player_wins;
         }
-        h(); // calls the handle' void operator()() const function
+        game.next();
     }
     std::cout << "you win " << player_wins << '\n'
         << "machine won " << (turns - player_wins) << '\n';
-
-    h.destroy(); // TODO RAII would be better
 }
 
 int main()
@@ -396,7 +401,7 @@ int main()
     check_properties();
 
     pennies_game();
+    // Choose one version of the mind reader (or play both if you want):
     mind_reader();
-
-    coroutine_minder_reader();
+    //coroutine_minder_reader();
 }
