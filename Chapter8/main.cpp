@@ -16,7 +16,7 @@
 std::optional<int> read_number(std::istream& in)
 {
     std::string line;
-    std::getline(std::cin, line);
+    std::getline(in, line);
     if (line == "0") {
         return { 0 };
     }
