@@ -91,22 +91,45 @@ int calculate_payout(int left, int middle, int right)
 	//{
 	//	++counter[number % 10];
 	//}
-	// TODO generalize this bit:
-	if (counter.size()==1)
+	// TODO compare with max_element next:
+	//if (counter.size()==1)
+	//{
+	//	if (counter[3] == 3 || counter[8] == 3)
+	//	{
+	//		return 4;
+	//	}
+	//	return 2;
+	//}
+	//else if (counter.size() == 2)
+	//{
+	//	if (counter[3] == 2 || counter[8] == 2)
+	//	{
+	//		return 2;
+	//	}
+	//	return 1;
+	//}
+	//return 0;
+	// TODO can we constexpr this?
+	// TODO ranges version and mention niebloids
+	// https://en.cppreference.com/w/cpp/algorithm/ranges/max_element
+	/*
+	* The function-like entities described on this page are niebloids, that is:
+	* Explicit template argument lists cannot be specified when calling any of them.
+	* None of them are visible to argument-dependent lookup.
+	* When any of them are found by normal unqualified lookup as the name to the left of the function-call operator, 
+	*	argument-dependent lookup is inhibited.
+	*/
+	auto it = std::max_element(counter.begin(), counter.end(),
+		[](auto it1, auto it2) { return it1.second < it2.second; });
+	// can this ever be end?
+	// what if two match?
+	if (it != counter.end())
 	{
-		if (counter[3] == 3 || counter[8] == 3)
-		{
-			return 4;
-		}
-		return 2;
-	}
-	else if (counter.size() == 2)
-	{
-		if (counter[3] == 2 || counter[8] == 2)
-		{
-			return 2;
-		}
-		return 1;
+		int digit = it->first;
+		size_t count = it->second;
+		constexpr int value[] = {0, 0, 1, 2};
+		auto pay = ((digit == 8 || digit == 3) ? 2 : 1) * value[count];
+		return pay;
 	}
 	return 0;
 }
@@ -168,12 +191,21 @@ void check_properties()
 	// parallel request
 	assert(std::count(std::execution::par, diffs.begin(), diffs.end(), 1) == count);
 
-	// Check closed form n * (n+1)/2 // TODO an algo rather than an old skool for loop?
+	// Check closed form n * (n+1)/2
+	// either with a for loop
 	for (size_t i = 0; i < triangle_numbers.size(); ++i)
 	{
 		const int n = i + 1;
 		assert(triangle_numbers[i] == n * (n + 1) / 2);
 	}
+	// or an algo with a mutable lambda
+	assert(std::all_of(triangle_numbers.begin(), triangle_numbers.end(),
+		[n = 0](int x) mutable
+		{
+			++n;
+			return x == n * (n + 1) / 2;
+		}
+	));
 
 	assert(calculate_payout(0, 1, 3) == 0);
 	assert(calculate_payout(0, 0, 3) == 1);
