@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cassert>
+#include <concepts>
 #include <execution>
 #include <format>
 #include <iostream>
@@ -13,8 +14,11 @@
 #include <utility>
 #include <vector>
 
+using Reel = std::vector<int>;
+
 // Listing 9.1 Make the first few triangle numbers
-std::vector<int> make_triangle_numbers(int count)
+// constexpr added in section 9.2
+constexpr std::vector<int> make_triangle_numbers(int count)
 {
 	std::vector<int> numbers(count);
 	std::iota(numbers.begin(), numbers.end(), 1);
@@ -56,19 +60,36 @@ void demo_further_properties()
 	}
 }
 
-//std::any_of
+// Listing 9.5 Setup reels
+template<std::invocable<std::vector<Reel>::iterator, std::vector<Reel>::iterator> T>
+constexpr std::vector<Reel> make_reels(int numbers, int number_of_reels, T shuffle)
+{
+	std::vector<Reel> reels(number_of_reels, make_triangle_numbers(numbers));
 
+	for (auto& reel : reels)
+	{
+		shuffle(reel.begin(), reel.end());
+	}
+	return reels;
+}
+
+// Listing 9.6 Display reels
+void show_reels(std::ostream& s, const std::vector<int>& left, const std::vector<int>& middle, const std::vector<int>& right)
+{
+	s << std::format(" {:>3} {:>3} {:>3}\n", left.back(), middle.back(), right.back());
+	s << std::format("-{:>3} {:>3} {:>3}-\n", left[0], middle[0], right[0]);
+	s << std::format(" {:>3} {:>3} {:>3}\n", left[1], middle[1], right[1]);
+}
+
+// Listing 9.7 Calculate payout
 int calculate_payout_v1(int left, int middle, int right)
 {
-	const int left_unit = left % 10;
-	const int middle_unit = middle % 10;
-	const int right_unit = right % 10;
 	int payout = 0;
-	if (left_unit == middle_unit && middle_unit == right_unit)
+	if (left == middle && middle == right)
 	{
 		payout = 2;
 	}
-	else if (left_unit == middle_unit || middle_unit == right_unit || left_unit == right_unit)
+	else if (left == middle || middle == right || left == right)
 	{
 		payout = 1;
 	}
@@ -85,7 +106,7 @@ std::map<int, size_t> frequencies(std::convertible_to<int> auto ...numbers)
 
 int calculate_payout(int left, int middle, int right)
 {
-	std::map<int, size_t> counter=frequencies(left, middle, right);
+	std::map<int, size_t> counter = frequencies(left, middle, right);
 	// for loop first then dots:
 	//for (int number : {left, middle, right})
 	//{
@@ -116,7 +137,7 @@ int calculate_payout(int left, int middle, int right)
 	* The function-like entities described on this page are niebloids, that is:
 	* Explicit template argument lists cannot be specified when calling any of them.
 	* None of them are visible to argument-dependent lookup.
-	* When any of them are found by normal unqualified lookup as the name to the left of the function-call operator, 
+	* When any of them are found by normal unqualified lookup as the name to the left of the function-call operator,
 	*	argument-dependent lookup is inhibited.
 	*/
 	auto it = std::max_element(counter.begin(), counter.end(),
@@ -127,45 +148,37 @@ int calculate_payout(int left, int middle, int right)
 	{
 		int digit = it->first;
 		size_t count = it->second;
-		constexpr int value[] = {0, 0, 1, 2};
+		constexpr int value[] = { 0, 0, 1, 2 };
 		auto pay = ((digit == 8 || digit == 3) ? 2 : 1) * value[count];
 		return pay;
 	}
 	return 0;
 }
 
-
+// Listing 9.8 A simple one armed bandit game
 void triangle_machine_spins_only()
 {
 	constexpr int numbers = 20;
 	constexpr size_t number_of_reels = 3u;
-	std::vector<std::vector<int>> reels(number_of_reels, make_triangle_numbers(numbers));
 	std::random_device rd;
 	std::mt19937 gen{ rd() };
+	auto shuffle = [&gen](auto begin, auto end) { std::shuffle(begin, end, gen); };
 
-	for (auto& reel : reels)
-	{
-		std::shuffle(reel.begin(), reel.end(), gen);
-	}
+	std::vector<Reel> reels = make_reels(numbers, number_of_reels, shuffle);
 
-	std::uniform_int_distribution dist(1, numbers - 1); // int dis includes last number, but rotate mustn't use a middle equal to or beyond end
+	std::uniform_int_distribution dist(1, numbers - 1);
 	int credit = 1;
 	while (true)
 	{
-		const int left = reels[0][0];
-		const int middle = reels[1][0];
-		const int right = reels[2][0];
-		std::cout << std::format(" {:>3} {:>3} {:>3}\n", reels[0][numbers - 1], reels[1][numbers - 1], reels[2][numbers - 1]);
-		std::cout << std::format("-{:>3} {:>3} {:>3}-\n", reels[0][0], reels[1][0], reels[2][0]);
-		std::cout << std::format(" {:>3} {:>3} {:>3}\n", reels[0][1], reels[1][1], reels[2][1]);
+		show_reels(std::cout, reels[0], reels[1], reels[2]);
+		const int won = calculate_payout(reels[0][0]%10, reels[1][0]%10, reels[2][0]%10);
 		--credit;
-		int won = calculate_payout(left, middle, right);
 		credit += won;
 		std::cout << "won " << won << " credit = " << credit << '\n';
 
 		std::string response;
 		std::getline(std::cin, response);
-		if (response == "q") // for quit
+		if (response != "")
 		{
 			break;
 		}
@@ -215,6 +228,13 @@ void check_properties()
 	assert(calculate_payout(0, 0, 0) == 2);
 	assert(calculate_payout(3, 3, 3) == 4);
 	assert(calculate_payout(8, 8, 8) == 4);
+
+	constexpr auto no_op = [](auto begin, auto end) { };
+	static_assert(make_reels(1, 1, no_op).size() == 1);
+
+	std::vector v{ 1,2,3,4,5 };
+	std::rotate(v.begin(), v.begin() + 3, v.end());
+	assert(v[0] == 4);
 }
 
 int main()
