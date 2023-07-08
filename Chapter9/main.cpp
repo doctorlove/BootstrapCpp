@@ -7,11 +7,13 @@
 #include <iterator>
 #include <map>
 #include <numeric>
+#include <optional>
 #include <random>
 #include <ranges>
 #include <set>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
 using Reel = std::vector<int>;
@@ -163,7 +165,6 @@ void triangle_machine_spins_only()
 	std::random_device rd;
 	std::mt19937 gen{ rd() };
 	auto shuffle = [&gen](auto begin, auto end) { std::shuffle(begin, end, gen); };
-
 	std::vector<Reel> reels = make_reels(numbers, number_of_reels, shuffle);
 
 	std::uniform_int_distribution dist(1, numbers - 1);
@@ -187,6 +188,79 @@ void triangle_machine_spins_only()
 			std::rotate(reel.begin(), reel.begin() + dist(gen), reel.end());
 		}
 	}
+}
+
+// Listing 9.9 Allow more options
+struct Hold {};
+struct Nudge {};
+struct Spin {};
+using options = std::variant<Hold, Nudge, Spin>;
+
+// Listing 9.10 Map a character to an action
+std::optional<options> get_option(char c)
+{
+	switch (c)
+	{
+	case 'h':
+		return Hold{};
+		break;
+	case 'n':
+		return Nudge{};
+		break;
+	case 's':
+		return Spin{};
+		break;
+	}
+	return {};
+}
+
+// TODO add some tests amd tidy up
+std::optional<std::vector<options>> get_input(size_t length, std::istream& in)
+{
+	std::string response;
+	std::getline(in, response);
+	auto size = response.size();
+	if (size == length)
+	{
+		std::vector<options> choice;
+		for (char c : response)
+		{
+			auto first = get_option(c);
+			if (first)
+			{
+				choice.push_back(first.value());
+			}
+			else
+			{
+				std::cout << response[0] << " not an option";
+				return {};
+			}
+		}
+		return choice;
+	}
+	return {};
+}
+
+template<typename ... Ts>
+struct Overload : Ts ... {
+	using Ts::operator() ...;
+};
+template<class... Ts> Overload(Ts...) -> Overload<Ts...>;
+// but https://stackoverflow.com/questions/62868708/user-defined-deduction-guides-in-c20
+// and https://www.modernescpp.com/index.php/visiting-a-std-variant-with-the-overload-pattern (cppinsights)
+// https://www.cppstories.com/2019/02/2lines3featuresoverload.html/
+// "We derive from lambdas, and then we expose their operator() "
+
+template<typename T>
+void move_reel(std::vector<int>& roll, options opt, T random_fn) // try invocable instead?
+{
+	auto RollMethod = Overload{
+		[](Hold) {},
+		[&roll](Nudge) { std::rotate(roll.begin(), roll.begin() + 1, roll.end()); },
+		[&roll, &random_fn](Spin) { std::rotate(roll.begin(), roll.begin() + random_fn(), roll.end()); },
+	};
+
+	std::visit(RollMethod, opt);
 }
 
 // Listing 9.2 and 9.3 Test our triangle numbers
@@ -219,6 +293,15 @@ void check_properties()
 			return x == n * (n + 1) / 2;
 		}
 	));
+
+	assert(calculate_payout_v1(0, 1, 3) == 0);
+	assert(calculate_payout_v1(0, 0, 3) == 1);
+	assert(calculate_payout_v1(0, 3, 3) == 1);
+	assert(calculate_payout_v1(3, 0, 3) == 1);
+	assert(calculate_payout_v1(3, 3, 0) == 1);
+	assert(calculate_payout_v1(0, 0, 0) == 2);
+	assert(calculate_payout_v1(3, 3, 3) == 2);
+	assert(calculate_payout_v1(8, 8, 8) == 2);
 
 	assert(calculate_payout(0, 1, 3) == 0);
 	assert(calculate_payout(0, 0, 3) == 1);
