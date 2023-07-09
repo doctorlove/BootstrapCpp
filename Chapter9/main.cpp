@@ -150,7 +150,7 @@ int calculate_payout(int left, int middle, int right)
 	{
 		int digit = it->first;
 		size_t count = it->second;
-		constexpr int value[] = { 0, 0, 1, 2 };
+		constexpr int value[] = { 0, 0, 50, 500 }; // approx payout, and 3 or 8 less likely, e.g. 1/1000 for all 3 beeing 3s or 8s
 		auto pay = ((digit == 8 || digit == 3) ? 2 : 1) * value[count];
 		return pay;
 	}
@@ -172,7 +172,7 @@ void triangle_machine_spins_only()
 	while (true)
 	{
 		show_reels(std::cout, reels[0], reels[1], reels[2]);
-		const int won = calculate_payout(reels[0][0]%10, reels[1][0]%10, reels[2][0]%10);
+		const int won = calculate_payout_v1(reels[0][0]%10, reels[1][0]%10, reels[2][0]%10);
 		--credit;
 		credit += won;
 		std::cout << "won " << won << " credit = " << credit << '\n';
@@ -214,42 +214,41 @@ std::optional<options> get_option(char c)
 	return {};
 }
 
-// TODO add some tests amd tidy up
-std::optional<std::vector<options>> get_input(size_t length, std::istream& in)
+std::optional<std::vector<options>> parse_input(const std::string & response)
 {
-	std::string response;
-	std::getline(in, response);
-	auto size = response.size();
-	if (size == length)
+	std::vector<options> choice;
+	for (char c : response)
 	{
-		std::vector<options> choice;
-		for (char c : response)
+		auto first = get_option(c);
+		if (first)
 		{
-			auto first = get_option(c);
-			if (first)
-			{
-				choice.push_back(first.value());
-			}
-			else
-			{
-				std::cout << response[0] << " not an option";
-				return {};
-			}
+			choice.push_back(first.value());
 		}
-		return choice;
+		else
+		{
+			std::cout << response[0] << " not an option";
+			return {};
+		}
 	}
-	return {};
+	return choice;
 }
 
-template<typename ... Ts>
-struct Overload : Ts ... {
-	using Ts::operator() ...;
-};
-template<class... Ts> Overload(Ts...) -> Overload<Ts...>;
+//template<typename ... Ts>
+//struct Overload : Ts ... {
+//	using Ts::operator() ...;
+//};
+//template<class... Ts> Overload(Ts...) -> Overload<Ts...>;
 // but https://stackoverflow.com/questions/62868708/user-defined-deduction-guides-in-c20
 // and https://www.modernescpp.com/index.php/visiting-a-std-variant-with-the-overload-pattern (cppinsights)
-// https://www.cppstories.com/2019/02/2lines3featuresoverload.html/
+
 // "We derive from lambdas, and then we expose their operator() "
+// https://www.cppstories.com/2019/02/2lines3featuresoverload.html/
+// no longer need recursion
+template <typename... Ts>
+struct Overload : Ts... {
+	using Ts::operator()...;
+	// […]
+};
 
 template<typename T>
 void move_reel(std::vector<int>& roll, options opt, T random_fn) // try invocable instead?
@@ -261,6 +260,43 @@ void move_reel(std::vector<int>& roll, options opt, T random_fn) // try invocabl
 	};
 
 	std::visit(RollMethod, opt);
+}
+
+// Listing ???
+void triangle_machine()
+{
+	constexpr int numbers = 20;
+	constexpr size_t number_of_reels = 3u;
+	std::random_device rd;
+	std::mt19937 gen{ rd() };
+	auto shuffle = [&gen](auto begin, auto end) { std::shuffle(begin, end, gen); };
+	std::vector<Reel> reels = make_reels(numbers, number_of_reels, shuffle); // TODO maybe use the move_reel?
+
+	std::uniform_int_distribution dist(1, numbers - 1);
+	auto random_fn = [&gen, &dist]() { return dist(gen); };
+	int credit = 1;
+	while (true)
+	{
+		show_reels(std::cout, reels[0], reels[1], reels[2]);
+		const int won = calculate_payout(reels[0][0] % 10, reels[1][0] % 10, reels[2][0] % 10);
+		--credit;
+		credit += won;
+		std::cout << "won " << won << " credit = " << credit << '\n';
+
+		std::string response;
+		std::getline(std::cin, response); // TODO only accept enter on a win
+		auto size = response.size(); // TODO check size too and allow another go? or put size check back into parse_input
+		if (response == "q") // TODO or something
+		{
+			break;
+		}
+		std::optional<std::vector<options>> choice = won ? std::vector<options>{Spin{}, Spin{}, Spin{}} : parse_input(response);
+
+		for (auto [reel, option] : std::views::zip(reels, choice.value())) // auto & didn't work, but this seems to be by ref anyway
+		{
+			move_reel(reel, option, random_fn);
+		}
+	}
 }
 
 // Listing 9.2 and 9.3 Test our triangle numbers
@@ -304,13 +340,13 @@ void check_properties()
 	assert(calculate_payout_v1(8, 8, 8) == 2);
 
 	assert(calculate_payout(0, 1, 3) == 0);
-	assert(calculate_payout(0, 0, 3) == 1);
-	assert(calculate_payout(0, 3, 3) == 2);
-	assert(calculate_payout(3, 0, 3) == 2);
-	assert(calculate_payout(3, 3, 0) == 2);
-	assert(calculate_payout(0, 0, 0) == 2);
-	assert(calculate_payout(3, 3, 3) == 4);
-	assert(calculate_payout(8, 8, 8) == 4);
+	assert(calculate_payout(0, 0, 3) == 50);
+	assert(calculate_payout(0, 3, 3) == 100);
+	assert(calculate_payout(3, 0, 3) == 100);
+	assert(calculate_payout(3, 3, 0) == 100);
+	assert(calculate_payout(0, 0, 0) == 500);
+	assert(calculate_payout(3, 3, 3) == 1000);
+	assert(calculate_payout(8, 8, 8) == 1000);
 
 	constexpr auto no_op = [](auto begin, auto end) { };
 	static_assert(make_reels(1, 1, no_op).size() == 1);
@@ -326,4 +362,5 @@ int main()
 	demo_further_properties();
 
 	triangle_machine_spins_only();
+	triangle_machine();
 }
