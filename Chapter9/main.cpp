@@ -98,59 +98,32 @@ int calculate_payout_v1(int left, int middle, int right)
 	return payout;
 }
 
-std::map<int, size_t> frequencies(std::convertible_to<int> auto ...numbers)
+// Listing 9.9 Finding frequencies using a parameter pack
+// We considered
+//template<typename... Ts>
+//std::map<int, size_t> frequencies(Ts... numbers)
+// and then
+//std::map<int, size_t> frequencies(auto ...numbers) 
+// but settled on
+std::map<int, size_t> frequencies(std::convertible_to<int> auto... numbers)
 {
 	std::map<int, size_t> counter{};
-	for (int i : { int(numbers)... })
+	for (int i : { static_cast<int>(numbers)... })
 		counter[i]++;
 	return counter;
 }
 
+// Listing 9.11 A fairer payout
 int calculate_payout(int left, int middle, int right)
 {
 	std::map<int, size_t> counter = frequencies(left, middle, right);
-	// for loop first then dots:
-	//for (int number : {left, middle, right})
-	//{
-	//	++counter[number % 10];
-	//}
-	// TODO compare with max_element next:
-	//if (counter.size()==1)
-	//{
-	//	if (counter[3] == 3 || counter[8] == 3)
-	//	{
-	//		return 4;
-	//	}
-	//	return 2;
-	//}
-	//else if (counter.size() == 2)
-	//{
-	//	if (counter[3] == 2 || counter[8] == 2)
-	//	{
-	//		return 2;
-	//	}
-	//	return 1;
-	//}
-	//return 0;
-	// TODO can we constexpr this?
-	// TODO ranges version and mention niebloids
-	// https://en.cppreference.com/w/cpp/algorithm/ranges/max_element
-	/*
-	* The function-like entities described on this page are niebloids, that is:
-	* Explicit template argument lists cannot be specified when calling any of them.
-	* None of them are visible to argument-dependent lookup.
-	* When any of them are found by normal unqualified lookup as the name to the left of the function-call operator,
-	*	argument-dependent lookup is inhibited.
-	*/
 	auto it = std::max_element(counter.begin(), counter.end(),
 		[](auto it1, auto it2) { return it1.second < it2.second; });
-	// can this ever be end?
-	// what if two match?
 	if (it != counter.end())
 	{
 		int digit = it->first;
 		size_t count = it->second;
-		constexpr int value[] = { 0, 0, 50, 500 }; // approx payout, and 3 or 8 less likely, e.g. 1/1000 for all 3 beeing 3s or 8s
+		constexpr int value[] = { 0, 0, 50, 500 }; // TODO decide weightings
 		auto pay = ((digit == 8 || digit == 3) ? 2 : 1) * value[count];
 		return pay;
 	}
@@ -190,14 +163,14 @@ void triangle_machine_spins_only()
 	}
 }
 
-// Listing 9.9 Allow more options
+// Listing 9.12 Allow more options
 struct Hold {};
 struct Nudge {};
 struct Spin {};
 using options = std::variant<Hold, Nudge, Spin>;
 
-// Listing 9.10 Map a character to an action
-std::optional<options> get_option(char c)
+// Listing 9.13 Map a character to an action
+constexpr std::optional<options> get_option(char c)
 {
 	switch (c)
 	{
@@ -214,7 +187,8 @@ std::optional<options> get_option(char c)
 	return {};
 }
 
-std::optional<std::vector<options>> parse_input(const std::string & response)
+// Listing 9.14 Check for holds, nudges or spins
+constexpr std::optional<std::vector<options>> parse_input(const std::string & response)
 {
 	std::vector<options> choice;
 	for (char c : response)
@@ -226,43 +200,52 @@ std::optional<std::vector<options>> parse_input(const std::string & response)
 		}
 		else
 		{
-			std::cout << response[0] << " not an option";
 			return {};
 		}
 	}
-	return choice;
+	return choice.empty() ? std::vector<options>{Spin{}, Spin{}, Spin{}} : choice;
 }
 
-//template<typename ... Ts>
-//struct Overload : Ts ... {
-//	using Ts::operator() ...;
-//};
-//template<class... Ts> Overload(Ts...) -> Overload<Ts...>;
-// but https://stackoverflow.com/questions/62868708/user-defined-deduction-guides-in-c20
-// and https://www.modernescpp.com/index.php/visiting-a-std-variant-with-the-overload-pattern (cppinsights)
+// Listing 9.15 Check for Enter pressed
+constexpr std::optional<std::vector<options>> parse_enter(const std::string& response)
+{
+	if (response.empty())
+	{
+		return std::vector<options>{Spin{}, Spin{}, Spin{}};
+	}
+	else
+	{
+		return {};
+	}
+}
 
-// "We derive from lambdas, and then we expose their operator() "
-// https://www.cppstories.com/2019/02/2lines3featuresoverload.html/
-// no longer need recursion
+// Listing 9.17 Bring operator() into scope in a class 
+// called Overload in the text
+template <typename T>
+struct Overload1 : T {
+	using T::operator();
+};
+
+// Listing 9.18 The Overload pattern
 template <typename... Ts>
 struct Overload : Ts... {
 	using Ts::operator()...;
-	// […]
 };
 
+// Listing 9.20 Move the reels
 template<typename T>
-void move_reel(std::vector<int>& roll, options opt, T random_fn) // try invocable instead?
+void move_reel(std::vector<int>& reel, options opt, T random_fn)
 {
 	auto RollMethod = Overload{
 		[](Hold) {},
-		[&roll](Nudge) { std::rotate(roll.begin(), roll.begin() + 1, roll.end()); },
-		[&roll, &random_fn](Spin) { std::rotate(roll.begin(), roll.begin() + random_fn(), roll.end()); },
+		[&reel](Nudge) { std::rotate(reel.begin(), reel.begin() + 1, reel.end()); },
+		[&reel, &random_fn](Spin) { std::rotate(reel.begin(), reel.begin() + random_fn(), reel.end()); },
 	};
 
 	std::visit(RollMethod, opt);
 }
 
-// Listing ???
+// Listing 9.21 An improved triangle number machine
 void triangle_machine()
 {
 	constexpr int numbers = 20;
@@ -270,7 +253,7 @@ void triangle_machine()
 	std::random_device rd;
 	std::mt19937 gen{ rd() };
 	auto shuffle = [&gen](auto begin, auto end) { std::shuffle(begin, end, gen); };
-	std::vector<Reel> reels = make_reels(numbers, number_of_reels, shuffle); // TODO maybe use the move_reel?
+	std::vector<Reel> reels = make_reels(numbers, number_of_reels, shuffle);
 
 	std::uniform_int_distribution dist(1, numbers - 1);
 	auto random_fn = [&gen, &dist]() { return dist(gen); };
@@ -284,19 +267,26 @@ void triangle_machine()
 		std::cout << "won " << won << " credit = " << credit << '\n';
 
 		std::string response;
-		std::getline(std::cin, response); // TODO only accept enter on a win
-		auto size = response.size(); // TODO check size too and allow another go? or put size check back into parse_input
-		if (response == "q") // TODO or something
+		std::getline(std::cin, response);
+		std::optional<std::vector<options>> choice = won ? parse_enter(response) : parse_input(response);
+		if (!choice)
 		{
 			break;
 		}
-		std::optional<std::vector<options>> choice = won ? std::vector<options>{Spin{}, Spin{}, Spin{}} : parse_input(response);
 
-		for (auto [reel, option] : std::views::zip(reels, choice.value())) // auto & didn't work, but this seems to be by ref anyway
+		for (auto [reel, option] : std::views::zip(reels, choice.value()))
 		{
 			move_reel(reel, option, random_fn);
 		}
 	}
+}
+
+// Listing 9.10 Fold example
+// TODO but how to deal with 0 param? See https://www.fluentcpp.com/2021/03/12/cpp-fold-expressions/
+template <typename H, typename ... Ts>
+auto add(H head, Ts... tail)
+{
+	return (head + ... + tail);
 }
 
 // Listing 9.2 and 9.3 Test our triangle numbers
@@ -354,6 +344,19 @@ void check_properties()
 	std::vector v{ 1,2,3,4,5 };
 	std::rotate(v.begin(), v.begin() + 3, v.end());
 	assert(v[0] == 4);
+
+	static_assert( parse_enter("").has_value());
+	static_assert(!parse_enter("q").has_value());
+	static_assert( parse_input("hhh").has_value());
+	static_assert(!parse_enter("q").has_value());
+
+	assert(1 == add(1));
+	assert(6 == add(1, 2, 3));
+	using namespace std::literals;
+	assert(add("Hello"s, "again"s, "world"s)=="Helloagainworld"s);
+
+	auto overload = Overload1{ []() { return 0; } };
+	assert(overload() == 0);
 }
 
 int main()
@@ -362,5 +365,7 @@ int main()
 	demo_further_properties();
 
 	triangle_machine_spins_only();
+
+	std::cout << "Hold (h), spin(s), nudge(n) or Enter for spins\n";
 	triangle_machine();
 }
