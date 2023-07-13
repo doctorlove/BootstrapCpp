@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <concepts>
 #include <execution>
@@ -40,22 +41,11 @@ void demo_further_properties()
 	std::cout << '\n';
 
 	std::map<int, int> last_digits;
-	//for (int number: triangle_numbers)
-	//{
-	//	++last_digits[number % 10];
-	//}
-	std::generate_n(std::inserter(last_digits, last_digits.begin()), 
-		10, // how many digits 
-		[n=0, triangle_numbers]() mutable  // TODO can I do a const & in the capture... is trasnfrom clearer?
-		{ 
-			auto key_value = std::make_pair(n, std::count_if(triangle_numbers.begin(), triangle_numbers.end(), [n](int i) { return i % 10 == n; }));
-			++n;
-			return key_value;
-		}
-	);
-	// TODO https://stackoverflow.com/questions/65977688/rangesviewsgroup-by-like-function-applying-predicate-to-consecutive-elements
-	// views::chunk_by
-	// https://en.cppreference.com/w/cpp/ranges/chunk_by_view
+	for (int number: triangle_numbers)
+	{
+		++last_digits[number % 10];
+	}
+	std::cout << "Tallies of the final digits of the first 20 triangle numbers\n";
 	for (const auto& [key, value] : last_digits)
 	{
 		std::cout << key << " : " << value << '\n';
@@ -98,7 +88,7 @@ int calculate_payout_v1(int left, int middle, int right)
 	return payout;
 }
 
-// Listing 9.9 Finding frequencies using a parameter pack
+// Listing 9.10 Finding frequencies using a parameter pack
 // We considered
 //template<typename... Ts>
 //std::map<int, size_t> frequencies(Ts... numbers)
@@ -123,9 +113,16 @@ int calculate_payout(int left, int middle, int right)
 	{
 		int digit = it->first;
 		size_t count = it->second;
-		constexpr int value[] = { 0, 0, 50, 500 }; // TODO decide weightings
-		auto pay = ((digit == 8 || digit == 3) ? 2 : 1) * value[count];
-		return pay;
+		if (digit == 8 || digit == 3)
+		{
+			constexpr std::array value = { 0, 0, 10, 250 };
+			return value[count];
+		}
+		else
+		{
+			constexpr std::array value = { 0, 0, 1, 15};
+			return value[count];
+		}
 	}
 	return 0;
 }
@@ -257,12 +254,12 @@ void triangle_machine()
 
 	std::uniform_int_distribution dist(1, numbers - 1);
 	auto random_fn = [&gen, &dist]() { return dist(gen); };
-	int credit = 1;
+	int credit = 2;
 	while (true)
 	{
 		show_reels(std::cout, reels[0], reels[1], reels[2]);
 		const int won = calculate_payout(reels[0][0] % 10, reels[1][0] % 10, reels[2][0] % 10);
-		--credit;
+		credit -= 2; // Note two credits per game now
 		credit += won;
 		std::cout << "won " << won << " credit = " << credit << '\n';
 
@@ -330,13 +327,13 @@ void check_properties()
 	assert(calculate_payout_v1(8, 8, 8) == 2);
 
 	assert(calculate_payout(0, 1, 3) == 0);
-	assert(calculate_payout(0, 0, 3) == 50);
-	assert(calculate_payout(0, 3, 3) == 100);
-	assert(calculate_payout(3, 0, 3) == 100);
-	assert(calculate_payout(3, 3, 0) == 100);
-	assert(calculate_payout(0, 0, 0) == 500);
-	assert(calculate_payout(3, 3, 3) == 1000);
-	assert(calculate_payout(8, 8, 8) == 1000);
+	assert(calculate_payout(0, 0, 3) == 1);
+	assert(calculate_payout(0, 3, 3) == 10);
+	assert(calculate_payout(3, 0, 3) == 10);
+	assert(calculate_payout(3, 3, 0) == 10);
+	assert(calculate_payout(0, 0, 0) == 15);
+	assert(calculate_payout(3, 3, 3) == 250);
+	assert(calculate_payout(8, 8, 8) == 250);
 
 	constexpr auto no_op = [](auto begin, auto end) { };
 	static_assert(make_reels(1, 1, no_op).size() == 1);
@@ -359,8 +356,60 @@ void check_properties()
 	assert(overload() == 0);
 }
 
+//// TODO remove me
+//int triangle_machine_sim()
+//{
+//	constexpr int numbers = 20;
+//	constexpr size_t number_of_reels = 3u;
+//	std::random_device rd;
+//	std::mt19937 gen{ rd() };
+//	auto shuffle = [&gen](auto begin, auto end) { std::shuffle(begin, end, gen); };
+//	std::vector<Reel> reels = make_reels(numbers, number_of_reels, shuffle);
+//
+//	std::uniform_int_distribution dist(1, numbers - 1);
+//	auto random_fn = [&gen, &dist]() { return dist(gen); };
+//	int credit = 2;
+//	int wins = 0;
+//	for (int i = 0; i < 80000; ++i)
+//	{
+//		//show_reels(std::cout, reels[0], reels[1], reels[2]);
+//		const int won = calculate_payout(reels[0][0] % 10, reels[1][0] % 10, reels[2][0] % 10);
+//		//		--credit;
+//		credit -= 2;
+//		credit += won;
+//		//std::cout << "won " << won << " credit = " << credit << '\n';
+//
+//		//std::string response;
+//		//std::getline(std::cin, response);
+//		//std::optional<std::vector<options>> choice = won ? parse_enter(response) : parse_input(response);
+//		//if (!choice)
+//		//{
+//		//	break;
+//		//}
+//		if (won)
+//			++wins;
+//		auto choice = { Spin{}, Spin{}, Spin{} };
+//		for (auto [reel, option] : std::views::zip(reels, choice))
+//		{
+//			move_reel(reel, option, random_fn);
+//		}
+//	}
+//	std::cout << "wins " << wins << '\n';
+//	return credit;
+//}
+
 int main()
 {
+	//int total = 0;
+	//for (int i = 0; i < 10; ++i)
+	//{
+	//	int credit = triangle_machine_sim();
+	//	std::cout << credit << '\n';
+	//	total += credit;
+	//}
+	//std::cout << "total " << total << '\n';
+	//std::cout << " mean " << total/10 << '\n';
+	//return 0;
 	check_properties();
 	demo_further_properties();
 
