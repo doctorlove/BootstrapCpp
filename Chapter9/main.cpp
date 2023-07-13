@@ -356,60 +356,8 @@ void check_properties()
 	assert(overload() == 0);
 }
 
-//// TODO remove me
-//int triangle_machine_sim()
-//{
-//	constexpr int numbers = 20;
-//	constexpr size_t number_of_reels = 3u;
-//	std::random_device rd;
-//	std::mt19937 gen{ rd() };
-//	auto shuffle = [&gen](auto begin, auto end) { std::shuffle(begin, end, gen); };
-//	std::vector<Reel> reels = make_reels(numbers, number_of_reels, shuffle);
-//
-//	std::uniform_int_distribution dist(1, numbers - 1);
-//	auto random_fn = [&gen, &dist]() { return dist(gen); };
-//	int credit = 2;
-//	int wins = 0;
-//	for (int i = 0; i < 80000; ++i)
-//	{
-//		//show_reels(std::cout, reels[0], reels[1], reels[2]);
-//		const int won = calculate_payout(reels[0][0] % 10, reels[1][0] % 10, reels[2][0] % 10);
-//		//		--credit;
-//		credit -= 2;
-//		credit += won;
-//		//std::cout << "won " << won << " credit = " << credit << '\n';
-//
-//		//std::string response;
-//		//std::getline(std::cin, response);
-//		//std::optional<std::vector<options>> choice = won ? parse_enter(response) : parse_input(response);
-//		//if (!choice)
-//		//{
-//		//	break;
-//		//}
-//		if (won)
-//			++wins;
-//		auto choice = { Spin{}, Spin{}, Spin{} };
-//		for (auto [reel, option] : std::views::zip(reels, choice))
-//		{
-//			move_reel(reel, option, random_fn);
-//		}
-//	}
-//	std::cout << "wins " << wins << '\n';
-//	return credit;
-//}
-
 int main()
 {
-	//int total = 0;
-	//for (int i = 0; i < 10; ++i)
-	//{
-	//	int credit = triangle_machine_sim();
-	//	std::cout << credit << '\n';
-	//	total += credit;
-	//}
-	//std::cout << "total " << total << '\n';
-	//std::cout << " mean " << total/10 << '\n';
-	//return 0;
 	check_properties();
 	demo_further_properties();
 
