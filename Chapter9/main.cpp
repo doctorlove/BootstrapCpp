@@ -127,7 +127,7 @@ int calculate_payout(int left, int middle, int right)
 	return 0;
 }
 
-// Listing 9.8 A simple one armed bandit game
+// Listing 9.8 A simple slot machine
 void triangle_machine_spins_only()
 {
 	constexpr int numbers = 20;
@@ -279,7 +279,6 @@ void triangle_machine()
 }
 
 // Listing 9.10 Fold example
-// TODO but how to deal with 0 param? See https://www.fluentcpp.com/2021/03/12/cpp-fold-expressions/
 template <typename H, typename ... Ts>
 auto add(H head, Ts... tail)
 {
