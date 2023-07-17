@@ -59,7 +59,7 @@ void pennies_game()
         << "I win " << turns - player_wins << '\n';
 }
 
-// Listing 8.3 Three possible choices
+// Listing 8.3 Three possible choices and outcomes
 enum class Choice
 {
     Same,
@@ -67,7 +67,14 @@ enum class Choice
     Shrug,
 };
 
-using state_t = std::tuple<int, Choice, int>;
+enum class Outcome
+{
+    Lose,
+    Win,
+    Unset,
+};
+
+using state_t = std::tuple<Outcome, Choice, Outcome>;
 using last_choices_t = std::pair<Choice, Choice>;
 
 // Listing 8.5 Specializing std::hash for our state tuple
@@ -76,9 +83,9 @@ struct std::hash<state_t>
 {
     std::size_t operator()(state_t const& state) const noexcept
     {
-        std::size_t h1 = std::hash<int>{}(std::get<0>(state));
+        std::size_t h1 = std::hash<Outcome>{}(std::get<0>(state));
         std::size_t h2 = std::hash<Choice>{}(std::get<1>(state));
-        std::size_t h3 = std::hash<int>{}(std::get<2>(state));
+        std::size_t h3 = std::hash<Outcome>{}(std::get<2>(state));
         return h1 + (h2 << 1) + (h3 << 2);
     }
 };
@@ -88,14 +95,14 @@ std::unordered_map<state_t, last_choices_t> initial_state()
 {
     const auto unset = std::pair<Choice, Choice>{ Choice::Shrug, Choice::Shrug };
     return {
-        { {0,Choice::Same,0}, unset },
-        { {0,Choice::Same,1}, unset },
-        { {0,Choice::Change,0}, unset },
-        { {0,Choice::Change,1}, unset },
-        { {1,Choice::Same,0}, unset },
-        { {1,Choice::Same,1}, unset },
-        { {1,Choice::Change,0}, unset },
-        { {1,Choice::Change,1}, unset },
+        { {Outcome::Lose, Choice::Same,   Outcome::Lose}, unset },
+        { {Outcome::Lose, Choice::Same,   Outcome::Win},  unset },
+        { {Outcome::Lose, Choice::Change, Outcome::Lose}, unset },
+        { {Outcome::Lose, Choice::Change, Outcome::Win},  unset },
+        { {Outcome::Win,  Choice::Same,   Outcome::Lose}, unset },
+        { {Outcome::Win,  Choice::Same,   Outcome::Win},  unset },
+        { {Outcome::Win,  Choice::Change, Outcome::Lose}, unset },
+        { {Outcome::Win,  Choice::Change, Outcome::Win},  unset },
     };
 }
 
@@ -150,37 +157,14 @@ class MindReader {
 
     int prediction = flip();
 
-    int prev_win_or_loss2 = -1;
-    Choice previous_turn_changed = Choice::Shrug;
-    int prev_win_or_loss1 = -1;
+    state_t state{ Outcome::Unset , Choice::Shrug, Outcome::Unset};
     int previous_go = -1;
 
-public:
-    MindReader(T gen, U dis)
-        : generator(gen), distribution(dis)
-    {
-    }
-
-    int get_prediction()
-    {
-        return prediction;
-    }
-
-    // Listing 8.13 The mind reader's update method
-    bool update(int player_choice)
+    // Listing 8.13 Update the prediction
+    bool update_prediction(int player_choice)
     {
         bool guessing = false;
-        const Choice turn_changed = player_choice == previous_go ? Choice::Same : Choice::Change;
-        previous_go = player_choice;
-
-        state_table.update({ prev_win_or_loss2, previous_turn_changed, prev_win_or_loss1 }, turn_changed);
-
-        const bool player_won_this_turn = player_choice != prediction;
-        prev_win_or_loss2 = prev_win_or_loss1;
-        previous_turn_changed = turn_changed;
-        prev_win_or_loss1 = player_won_this_turn;
-
-        auto option = prediction_method(state_table.choices({ prev_win_or_loss2, previous_turn_changed, prev_win_or_loss1 }));
+        Choice option = prediction_method(state_table.choices(state));
         switch (option)
         {
         case Choice::Shrug:
@@ -201,6 +185,30 @@ public:
     {
         return distribution(generator);
     }
+
+public:
+    MindReader(T gen, U dis)
+        : generator(gen), distribution(dis)
+    {
+    }
+
+    int get_prediction()
+    {
+        return prediction;
+    }
+
+    // Listing 8.14 The mind reader's update method
+    bool update(int player_choice)
+    {
+        const Choice turn_changed = player_choice == previous_go ? Choice::Same : Choice::Change;
+        state_table.update(state, turn_changed);
+
+        previous_go = player_choice;
+        state = {std::get<2>(state), turn_changed, (player_choice != prediction) ? Outcome::Win : Outcome::Lose};
+
+        return update_prediction(player_choice);
+    }
+
 };
 
 // Listing 8.7 Check we have no hash collisions (and more besides)
@@ -231,18 +239,18 @@ void check_properties()
     assert(prediction_method({ Choice::Same, Choice::Change }) == Choice::Shrug);
 
     State s;
-    auto got1 = s.choices({ -1, Choice::Shrug, -1 });
+    auto got1 = s.choices({ Outcome::Unset, Choice::Shrug, Outcome::Unset });
     assert(got1.first == Choice::Shrug);
     assert(got1.second == Choice::Shrug);
-    auto got2 = s.choices({ 0, Choice::Same, -1 });
+    auto got2 = s.choices({ Outcome::Lose, Choice::Same, Outcome::Unset });
     assert(got2.first == Choice::Shrug);
     assert(got2.second == Choice::Shrug);
-    auto got3 = s.choices({ 1, Choice::Change, -1 });
+    auto got3 = s.choices({ Outcome::Win, Choice::Change, Outcome::Unset });
     assert(got3.first == Choice::Shrug);
     assert(got3.second == Choice::Shrug);
 
     {
-        // Listing 6.12 had a RandomBlob we tested
+        // Listing 6.12 had a RandomBlob we tested, using a lambda to stub out the random function
         // This always returns 0
         MindReader mr([]() { return 0; }, [](auto gen) { return gen(); });
         assert( mr.update(0)); //flip first two goes
@@ -272,7 +280,7 @@ void check_properties()
     }
 }
 
-// Listing 8.14 A mind reading game
+// Listing 8.15 A mind reading game
 void mind_reader()
 {
     int turns = 0;
@@ -315,18 +323,32 @@ void mind_reader()
         << "machine won " << (turns - player_wins) << '\n';
 }
 
-// Listing 8.17 and 8.19 The coroutine's Task and promise_type
+// Listing 8.19 Customer "deleter"
+struct coro_deleter {
+    template<typename Promise>
+    void operator()(Promise* promise) const noexcept
+    {
+        auto handle = std::coroutine_handle<Promise>::from_promise(*promise);
+        if (handle)
+            handle.destroy();
+    }
+};
+
+template<typename T>
+using promise_ptr = std::unique_ptr<T, coro_deleter>;
+
+
+// Listing 8.18, 8.20 and 8.22 The coroutine's Task and promise_type
 struct Task
 {
+    // Listing 8.21 Our promise type
     struct promise_type
     {
         std::pair<int, int> choice_and_prediction;
 
         Task get_return_object()
         {
-            return {
-              .handle = std::coroutine_handle<promise_type>::from_promise(*this)
-            };
+            return Task(this);
         }
         std::suspend_never initial_suspend() noexcept { return {}; }
         std::suspend_always final_suspend() noexcept { return {}; }
@@ -340,22 +362,32 @@ struct Task
         void return_void() { }
     };
 
-    bool done() { return handle.done(); }
-    std::pair<int, int> choice_and_prediction()
+    std::pair<int, int> choice_and_prediction() const
     {
-        return handle.promise().choice_and_prediction;
+        return promise->choice_and_prediction;
     }
-    void next() { handle(); }
-    ~Task() { handle.destroy(); }
-    std::coroutine_handle<promise_type> handle;
+    bool done() const
+    {
+        auto handle = std::coroutine_handle<promise_type>::from_promise(*promise);
+        return handle.done();
+    }
+    void next()
+    { 
+        auto handle = std::coroutine_handle<promise_type>::from_promise(*promise);
+        handle();
+    }
+private:
+    promise_ptr<promise_type> promise;
+    Task(promise_type* p) : promise(p) {}
 };
 
-// Listing 8.16 Our first coroutine
+// Listing 8.17 Our first coroutine
 Task coroutine_game()
 {
     std::mt19937 gen{ std::random_device{}() };
     std::uniform_int_distribution dist{ 0, 1 };
     MindReader mr(gen, dist);
+
     while (true)
     {
         auto input = read_number(std::cin);
@@ -364,12 +396,12 @@ Task coroutine_game()
             co_return;
         }
         int player_choice = input.value();
-        co_yield{ player_choice , mr.get_prediction() }; // We could actually co yield dist(gen) first two callls
+        co_yield{ player_choice , mr.get_prediction() };
         mr.update(player_choice);
     }
 }
 
-// Listing 8.20 A coroutine version of a mind reader
+// Listing 8.23 A coroutine version of a mind reader
 void coroutine_minder_reader()
 {
     int turns = 0;
