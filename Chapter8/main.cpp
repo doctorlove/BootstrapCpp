@@ -192,7 +192,7 @@ public:
     {
     }
 
-    int get_prediction()
+    int get_prediction() const
     {
         return prediction;
     }
