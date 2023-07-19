@@ -106,24 +106,12 @@ std::unordered_map<state_t, last_choices_t> initial_state()
     };
 }
 
-// Listing 8.8 Choice from state
-Choice prediction_method(const last_choices_t& choices)
-{
-    if (choices.first == choices.second)
-    {
-        return choices.first;
-    }
-    else
-    {
-        return Choice::Shrug;
-    }
-}
-// Listing 8.9 Class to track the game's state
+// Listing 8.8 Class to track the game's state
 class State
 {
     std::unordered_map<state_t, last_choices_t> state_lookup = initial_state();
 public:
-    // Listing 8.10 Find the choices or return two shrugs
+    // Listing 8.9 Find the choices or return two shrugs
     last_choices_t choices(const state_t& key) const
     {
         if (auto it = state_lookup.find(key); it!=state_lookup.end())
@@ -135,17 +123,30 @@ public:
             return { Choice::Shrug, Choice::Shrug };
         }
     }
-    // Listing 8.11 Update choices for valid keys
+    // Listing 8.10 Update choices for valid keys
     void update(const state_t& key, const Choice turn_changed)
     {
         if (auto it = state_lookup.find(key); it != state_lookup.end())
         {
             const auto [prev2, prev1] = it->second;
             last_choices_t value{ prev1, turn_changed };
-            state_lookup[key] = value;
+            it->second = value;
         }
     }
 };
+
+// Listing 8.11 Choice from state
+Choice prediction_method(const last_choices_t& choices)
+{
+    if (choices.first == choices.second)
+    {
+        return choices.first;
+    }
+    else
+    {
+        return Choice::Shrug;
+    }
+}
 
 // Listing 8.12 A mind-reading class
 template <std::invocable<> T, typename U>
@@ -157,7 +158,7 @@ class MindReader {
 
     int prediction = flip();
 
-    state_t state{ Outcome::Unset , Choice::Shrug, Outcome::Unset};
+    state_t state{Outcome::Unset, Choice::Shrug, Outcome::Unset};
     int previous_go = -1;
 
     // Listing 8.13 Update the prediction
@@ -324,8 +325,9 @@ void mind_reader()
 }
 
 // Listing 8.19 Customer "deleter"
-struct coro_deleter {
-    template<typename Promise>
+template<typename Promise>
+struct coro_deleter 
+{
     void operator()(Promise* promise) const noexcept
     {
         auto handle = std::coroutine_handle<Promise>::from_promise(*promise);
@@ -335,7 +337,7 @@ struct coro_deleter {
 };
 
 template<typename T>
-using promise_ptr = std::unique_ptr<T, coro_deleter>;
+using promise_ptr = std::unique_ptr<T, coro_deleter<T>>;
 
 
 // Listing 8.18, 8.20 and 8.22 The coroutine's Task and promise_type

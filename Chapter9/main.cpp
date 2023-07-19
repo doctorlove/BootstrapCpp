@@ -40,7 +40,7 @@ void demo_further_properties()
 	std::ranges::copy(odd_or_even, std::ostream_iterator<char>(std::cout, ""));
 	std::cout << '\n';
 
-	std::map<int, int> last_digits;
+	std::map<int, size_t> last_digits;
 	for (int number: triangle_numbers)
 	{
 		++last_digits[number % 10];
