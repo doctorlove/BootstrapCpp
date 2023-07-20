@@ -160,14 +160,52 @@ void triangle_machine_spins_only()
 	}
 }
 
+// Listing 9.9 Fold example
+template<typename... Ts>
+auto add(Ts const&... tail)
+{
+	return (... + tail);
+	// or
+	// return (tail + ...);
+}
+
 // Listing 9.12 Allow more options
 struct Hold {};
 struct Nudge {};
 struct Spin {};
 using options = std::variant<Hold, Nudge, Spin>;
 
-// Listing 9.13 Map a character to an action
-constexpr std::optional<options> get_option(char c)
+// Listing 9.13 Three spins for Enter
+constexpr std::optional<std::vector<options>> parse_enter(const std::string& response)
+{
+	if (response.empty())
+	{
+		return std::vector<options>{Spin{}, Spin{}, Spin{}};
+	}
+	else
+	{
+		return {};
+	}
+}
+
+// Listing 9.14 Check for Enter pressed
+std::optional<std::vector<options>> get_enter()
+{
+	std::cout << "Enter to play\n";
+	std::string response;
+	std::getline(std::cin, response);
+	auto got = parse_enter(response);
+	if (!got)
+	{
+		std::cout << "Are you sure you want to quit? Press Enter to keep playing\n";
+		std::getline(std::cin, response);
+		got = parse_enter(response);
+	}
+	return got;
+}
+
+// Listing 9.15 Map a character to an action
+constexpr std::optional<options> map_input(char c)
 {
 	switch (c)
 	{
@@ -184,13 +222,13 @@ constexpr std::optional<options> get_option(char c)
 	return {};
 }
 
-// Listing 9.14 Check for holds, nudges or spins
+// Listing 9.16 Check for holds, nudges or spins
 constexpr std::optional<std::vector<options>> parse_input(const std::string & response)
 {
 	std::vector<options> choice;
 	for (char c : response)
 	{
-		auto first = get_option(c);
+		auto first = map_input(c);
 		if (first)
 		{
 			choice.push_back(first.value());
@@ -203,33 +241,37 @@ constexpr std::optional<std::vector<options>> parse_input(const std::string & re
 	return choice.empty() ? std::vector<options>{Spin{}, Spin{}, Spin{}} : choice;
 }
 
-// Listing 9.15 Check for Enter pressed
-constexpr std::optional<std::vector<options>> parse_enter(const std::string& response)
+// Listing 9.17 Check for options
+std::optional<std::vector<options>> get_input()
 {
-	if (response.empty())
+	std::cout << "Hold (h), spin(s), nudge(n) or Enter for spins\n";
+	std::string response;
+	std::getline(std::cin, response);
+	auto got = parse_input(response);
+	if (!got || response.length()>3)
 	{
-		return std::vector<options>{Spin{}, Spin{}, Spin{}};
+		std::cout << "Are you sure you want to quit?\n";
+		std::getline(std::cin, response);
+		got = parse_input(response);
 	}
-	else
-	{
-		return {};
-	}
+	return got;
 }
 
-// Listing 9.17 Bring operator() into scope in a class 
+
+// Listing 9.19 Bring operator() into scope in a class 
 // called Overload in the text
 template <typename T>
 struct Overload1 : T {
 	using T::operator();
 };
 
-// Listing 9.18 The Overload pattern
+// Listing 9.20 The Overload pattern
 template <typename... Ts>
 struct Overload : Ts... {
 	using Ts::operator()...;
 };
 
-// Listing 9.20 Move the reels
+// Listing 9.22 Move the reels
 template<typename T>
 void move_reel(std::vector<int>& reel, options opt, T random_fn)
 {
@@ -242,7 +284,7 @@ void move_reel(std::vector<int>& reel, options opt, T random_fn)
 	std::visit(RollMethod, opt);
 }
 
-// Listing 9.21 An improved triangle number machine
+// Listing 9.23 An improved triangle number machine
 void triangle_machine()
 {
 	constexpr int numbers = 20;
@@ -263,9 +305,7 @@ void triangle_machine()
 		credit += won;
 		std::cout << "won " << won << " credit = " << credit << '\n';
 
-		std::string response;
-		std::getline(std::cin, response);
-		std::optional<std::vector<options>> choice = won ? parse_enter(response) : parse_input(response);
+		std::optional<std::vector<options>> choice = won ? get_enter() : get_input();
 		if (!choice)
 		{
 			break;
@@ -276,13 +316,6 @@ void triangle_machine()
 			move_reel(reel, option, random_fn);
 		}
 	}
-}
-
-// Listing 9.10 Fold example
-template <typename H, typename ... Ts>
-auto add(H head, Ts... tail)
-{
-	return (head + ... + tail);
 }
 
 // Listing 9.2 and 9.3 Test our triangle numbers
@@ -344,8 +377,9 @@ void check_properties()
 	static_assert( parse_enter("").has_value());
 	static_assert(!parse_enter("q").has_value());
 	static_assert( parse_input("hhh").has_value());
-	static_assert(!parse_enter("q").has_value());
+	static_assert(!parse_input("q").has_value());
 
+	// assert(0 == add()); //won't compile unless we use 0 + ... + tail, but that stops the string use case compiling
 	assert(1 == add(1));
 	assert(6 == add(1, 2, 3));
 	using namespace std::literals;
@@ -362,6 +396,6 @@ int main()
 
 	triangle_machine_spins_only();
 
-	std::cout << "Hold (h), spin(s), nudge(n) or Enter for spins\n";
+	std::cout << "New game with Hold (h), spin(s), nudge(n) or Enter for spins\n";
 	triangle_machine();
 }
