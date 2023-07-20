@@ -242,13 +242,13 @@ constexpr std::optional<std::vector<options>> parse_input(const std::string & re
 }
 
 // Listing 9.17 Check for options
-std::optional<std::vector<options>> get_input()
+std::optional<std::vector<options>> get_input(size_t expected_length)
 {
 	std::cout << "Hold (h), spin(s), nudge(n) or Enter for spins\n";
 	std::string response;
 	std::getline(std::cin, response);
 	auto got = parse_input(response);
-	if (!got || response.length()>3)
+	if (!got || response.length()> expected_length)
 	{
 		std::cout << "Are you sure you want to quit?\n";
 		std::getline(std::cin, response);
@@ -305,7 +305,7 @@ void triangle_machine()
 		credit += won;
 		std::cout << "won " << won << " credit = " << credit << '\n';
 
-		std::optional<std::vector<options>> choice = won ? get_enter() : get_input();
+		std::optional<std::vector<options>> choice = won ? get_enter() : get_input(number_of_reels);
 		if (!choice)
 		{
 			break;
