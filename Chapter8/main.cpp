@@ -5,6 +5,7 @@
 #include <optional>
 #include <functional>
 #include <map>
+#include <memory>
 #include <random>
 #include <string>
 #include <tuple> 
