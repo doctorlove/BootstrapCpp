@@ -120,7 +120,7 @@ int calculate_payout(int left, int middle, int right)
 		}
 		else
 		{
-			constexpr std::array value = { 0, 0, 1, 15};
+			constexpr std::array value = { 0, 0, 1, 15 };
 			return value[count];
 		}
 	}
@@ -142,10 +142,10 @@ void triangle_machine_spins_only()
 	while (true)
 	{
 		show_reels(std::cout, reels[0], reels[1], reels[2]);
-		const int won = calculate_payout_v1(reels[0][0]%10, reels[1][0]%10, reels[2][0]%10);
+		const int payout = calculate_payout_v1(reels[0][0]%10, reels[1][0]%10, reels[2][0]%10);
 		--credit;
-		credit += won;
-		std::cout << "won " << won << " credit = " << credit << '\n';
+		credit += payout;
+		std::cout << "won " << payout << " credit = " << credit << '\n';
 
 		std::string response;
 		std::getline(std::cin, response);
@@ -162,7 +162,7 @@ void triangle_machine_spins_only()
 
 // Listing 9.9 Fold example
 template<typename... Ts>
-auto add(Ts const&... tail)
+auto add(const Ts &... tail)
 {
 	return (... + tail);
 	// or
@@ -265,11 +265,20 @@ struct Overload1 : T {
 	using T::operator();
 };
 
+// for clang
+template<typename T>
+Overload1(T) -> Overload1<T>;
+
+
 // Listing 9.20 The Overload pattern
 template <typename... Ts>
 struct Overload : Ts... {
 	using Ts::operator()...;
 };
+
+// for clang
+template<typename... Ts>
+Overload(Ts...) -> Overload<Ts...>;
 
 // Listing 9.22 Move the reels
 template<typename T>
@@ -311,10 +320,16 @@ void triangle_machine()
 			break;
 		}
 
+		// Note - if std::views::zip doesn't compile, use the for loop instead or Range-v3, https://ericniebler.github.io/range-v3/
 		for (auto [reel, option] : std::views::zip(reels, choice.value()))
 		{
 			move_reel(reel, option, random_fn);
 		}
+		// You might need to use this instead of the view's zip
+		//for (size_t i = 0; i < reels.size(); ++i)
+		//{
+		//	move_reel(reels[i], choice.value()[i], random_fn);
+		//}
 	}
 }
 
@@ -370,9 +385,11 @@ void check_properties()
 	constexpr auto no_op = [](auto begin, auto end) { };
 	static_assert(make_reels(1, 1, no_op).size() == 1);
 
-	std::vector v{ 1,2,3,4,5 };
+	std::vector v{1, 2, 3, 4, 5};
 	std::rotate(v.begin(), v.begin() + 3, v.end());
 	assert(v[0] == 4);
+	std::rotate(v.begin(), v.begin() + 2, v.end());
+	assert(v[0] == 1);
 
 	static_assert( parse_enter("").has_value());
 	static_assert(!parse_enter("q").has_value());
@@ -385,7 +402,7 @@ void check_properties()
 	using namespace std::literals;
 	assert(add("Hello"s, "again"s, "world"s)=="Helloagainworld"s);
 
-	auto overload = Overload1{ []() { return 0; } };
+	auto overload = Overload{ []() { return 0; } };
 	assert(overload() == 0);
 }
 
