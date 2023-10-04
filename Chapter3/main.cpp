@@ -103,7 +103,7 @@ constexpr bool is_prime(int n)
 	return true;
 }
 
-// Listing 3.13, which started as listing 3.12, a function to indicate which digits are correct
+// Listing 3.14, which started as listing 3.13, a function to indicate which digits are correct
 // * means correct in the right place
 // ^ means correct in the wrong place
 // . means wrong
@@ -165,7 +165,7 @@ void check_properties()
 
 }
 
-// Listing 3.14 A much better number guessing game
+// Listing 3.15 A much better number guessing game
 void guess_number_with_clues(unsigned number, auto message)
 {
 	std::cout << "Guess the number.\n>";
@@ -184,7 +184,7 @@ void guess_number_with_clues(unsigned number, auto message)
 }
 
 
-// Listing 3.11 Generating a prime number
+// Listing 3.12 Generating a prime number
 int some_prime_number()
 {
 	std::random_device rd;
@@ -198,7 +198,7 @@ int some_prime_number()
 	return n;
 }
 
-// Listing 3.18 Using all the clues
+// Listing 3.19 Using all the clues
 void guess_number_with_more_clues(int number, auto messages)
 {
 	std::cout << "Guess the number.\n>";
@@ -235,9 +235,11 @@ int main()
 	// alow a non-number to indicate defeat
 	guess_number_or_give_up(some_const_number());
 
+	// Listing 3.10
 	// Guess any number with a clue:
 	guess_number_with_clues(some_random_number(), [](int number, int guess) { return std::format("Your guess was too {}\n", (guess < number ? "small" : "big")); });
 
+	// Listing 3.20
 	// Guess a prime number:
 	auto check_prime = [](int guess) {
 		return std::string((is_prime(guess)) ? "" : "Not prime\n");
