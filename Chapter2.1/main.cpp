@@ -8,6 +8,7 @@ void generate_triangle()
     {
         std::cout << number << ' ';
     }
+    std::cout << '\n';
 }
 
 int main()
