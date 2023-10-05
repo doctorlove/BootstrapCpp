@@ -22,7 +22,7 @@ namespace cards
 	//}
 
 	//Listing 5.14 Turn an enum value into a string
-	std::string to_string(Suit suit)
+	std::string to_string(const Suit & suit)
 	{
 		using namespace std::literals;
 		switch (suit)
@@ -40,16 +40,24 @@ namespace cards
 		}
 	}
 
-	// Similar to Listing 5.13 Use the enum name rather than value, improved on in listing 5.15
-	// version here using the original struct, to give a different overload
+	// Not in text, used in main to show first card
 	std::ostream& operator<<(std::ostream& os, const CardVersion1& card)
 	{
-		os << card.value << " of " << to_string(card.suit);
+		os << card.value << " of " << static_cast<int>(card.suit);
+		return os;
+	}
+
+	// Listing 5.13 Use the enum name rather than value, improved on in listing 5.15
+	// reanmed stream_insertion_operator here instead of operator<< to avoid name clash
+//	std::ostream& operator<<(std::ostream& os, const Card& card)
+	std::ostream& stream_insertion_operator(std::ostream& os, const Card& card)
+	{
+		os << card.value().value() << " of " << static_cast<int>(card.suit());
 		return os;
 	}
 
 	//Listing 5.15 Convert card value to a string
-	std::string to_string(FaceValue value)
+	std::string to_string(const FaceValue & value)
 	{
 		using namespace std::literals;
 

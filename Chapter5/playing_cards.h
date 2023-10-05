@@ -77,8 +77,8 @@ namespace cards
 
 	// various other functions, defined in the source file and declared here
 	Suit& operator++(Suit& suit);
-	std::string to_string(Suit suit);
-	std::string to_string(FaceValue value);
+	std::string to_string(const Suit & suit);
+	std::string to_string(const FaceValue & value);
 
 	std::array<Card, 52> create_deck();
 	void shuffle_deck(std::array<Card, 52>& deck);
