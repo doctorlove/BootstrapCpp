@@ -107,12 +107,12 @@ std::unordered_map<state_t, last_choices_t> initial_state()
     };
 }
 
-// Listing 8.8 Class to track the game's state
+// Listing 8.7 Class to track the game's state
 class State
 {
     std::unordered_map<state_t, last_choices_t> state_lookup = initial_state();
 public:
-    // Listing 8.9 Find the choices or return two shrugs
+    // Listing 8.8 Find the choices or return two shrugs
     last_choices_t choices(const state_t& key) const
     {
         if (auto it = state_lookup.find(key); it!=state_lookup.end())
@@ -124,7 +124,7 @@ public:
             return { Choice::Shrug, Choice::Shrug };
         }
     }
-    // Listing 8.10 Update choices for valid keys
+    // Listing 8.9 Update choices for valid keys
     void update(const state_t& key, const Choice turn_changed)
     {
         if (auto it = state_lookup.find(key); it != state_lookup.end())
@@ -136,7 +136,7 @@ public:
     }
 };
 
-// Listing 8.11 Choice from state
+// Listing 8.10 Choice from state
 Choice prediction_method(const last_choices_t& choices)
 {
     if (choices.first == choices.second)
@@ -149,7 +149,7 @@ Choice prediction_method(const last_choices_t& choices)
     }
 }
 
-// Listing 8.12 A mind-reading class
+// Listing 8.11 A mind-reading class
 template <std::invocable<> T, typename U>
 class MindReader {
     State state_table;
@@ -162,7 +162,7 @@ class MindReader {
     state_t state{Outcome::Unset, Choice::Shrug, Outcome::Unset};
     int previous_go = -1;
 
-    // Listing 8.13 Update the prediction
+    // Listing 8.12 Update the prediction
     bool update_prediction(int player_choice)
     {
         bool guessing = false;
@@ -199,7 +199,7 @@ public:
         return prediction;
     }
 
-    // Listing 8.14 The mind reader's update method
+    // Listing 8.13 The mind reader's update method
     bool update(int player_choice)
     {
         const Choice turn_changed = player_choice == previous_go ? Choice::Same : Choice::Change;
@@ -213,7 +213,7 @@ public:
 
 };
 
-// Listing 8.7 Check we have no hash collisions (and more besides)
+// Listing 8.6 Check we have no hash collisions (and more besides)
 void check_properties()
 {
     // No bucket clashes
@@ -282,7 +282,7 @@ void check_properties()
     }
 }
 
-// Listing 8.15 A mind reading game
+// Listing 8.14 A mind reading game
 void mind_reader()
 {
     int turns = 0;
@@ -325,7 +325,7 @@ void mind_reader()
         << "machine won " << (turns - player_wins) << '\n';
 }
 
-// Listing 8.19 Customer "deleter"
+// Listing 8.18 Customer "deleter"
 template<typename Promise>
 struct coro_deleter 
 {
@@ -341,10 +341,10 @@ template<typename T>
 using promise_ptr = std::unique_ptr<T, coro_deleter<T>>;
 
 
-// Listing 8.18, 8.20 and 8.22 The coroutine's Task and promise_type
+// Listing 8.17, 8.20 and 8.21 The coroutine's Task and promise_type
 struct Task
 {
-    // Listing 8.21 Our promise type
+    // Listing 8.19 Our promise type
     struct promise_type
     {
         std::pair<int, int> choice_and_prediction;
@@ -384,7 +384,7 @@ private:
     Task(promise_type* p) : promise(p) {}
 };
 
-// Listing 8.17 Our first coroutine
+// Listing 8.16 Our first coroutine
 Task coroutine_game()
 {
     std::mt19937 gen{ std::random_device{}() };
@@ -404,7 +404,7 @@ Task coroutine_game()
     }
 }
 
-// Listing 8.23 A coroutine version of a mind reader
+// Listing 8.22 A coroutine version of a mind reader
 void coroutine_minder_reader()
 {
     int turns = 0;
