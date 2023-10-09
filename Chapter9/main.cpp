@@ -29,6 +29,7 @@ constexpr std::vector<int> make_triangle_numbers(int count)
 	return numbers;
 }
 
+// Listing 9.5 and 9.6
 void demo_further_properties()
 {
 	const int count = 20;
@@ -52,7 +53,7 @@ void demo_further_properties()
 	}
 }
 
-// Listing 9.5 Setup reels
+// Listing 9.7 Setup reels
 template<std::invocable<std::vector<Reel>::iterator, std::vector<Reel>::iterator> T>
 constexpr std::vector<Reel> make_reels(int numbers, int number_of_reels, T shuffle)
 {
@@ -65,7 +66,7 @@ constexpr std::vector<Reel> make_reels(int numbers, int number_of_reels, T shuff
 	return reels;
 }
 
-// Listing 9.6 Display reels
+// Listing 9.8 Display reels
 void show_reels(std::ostream& s, const std::vector<int>& left, const std::vector<int>& middle, const std::vector<int>& right)
 {
 	s << std::format(" {:>3} {:>3} {:>3}\n", left.back(), middle.back(), right.back());
@@ -73,7 +74,7 @@ void show_reels(std::ostream& s, const std::vector<int>& left, const std::vector
 	s << std::format(" {:>3} {:>3} {:>3}\n", left[1], middle[1], right[1]);
 }
 
-// Listing 9.7 Calculate payout
+// Listing 9.9 Calculate payout
 int calculate_payout_v1(int left, int middle, int right)
 {
 	int payout = 0;
@@ -88,7 +89,7 @@ int calculate_payout_v1(int left, int middle, int right)
 	return payout;
 }
 
-// Listing 9.10 Finding frequencies using a parameter pack
+// Listing 9.12 Finding frequencies using a parameter pack
 // We considered
 //template<typename... Ts>
 //std::map<int, size_t> frequencies(Ts... numbers)
@@ -103,7 +104,7 @@ std::map<int, size_t> frequencies(std::convertible_to<int> auto... numbers)
 	return counter;
 }
 
-// Listing 9.11 A fairer payout
+// Listing 9.13 A fairer payout
 int calculate_payout(int left, int middle, int right)
 {
 	std::map<int, size_t> counter = frequencies(left, middle, right);
@@ -127,7 +128,7 @@ int calculate_payout(int left, int middle, int right)
 	return 0;
 }
 
-// Listing 9.8 A simple slot machine
+// Listing 9.10 A simple slot machine
 void triangle_machine_spins_only()
 {
 	constexpr int numbers = 20;
@@ -160,7 +161,7 @@ void triangle_machine_spins_only()
 	}
 }
 
-// Listing 9.9 Fold example
+// Listing 9.11 Fold example
 template<typename... Ts>
 auto add(const Ts &... tail)
 {
@@ -169,13 +170,13 @@ auto add(const Ts &... tail)
 	// return (tail + ...);
 }
 
-// Listing 9.12 Allow more options
+// Listing 9.14 Allow more options
 struct Hold {};
 struct Nudge {};
 struct Spin {};
 using options = std::variant<Hold, Nudge, Spin>;
 
-// Listing 9.13 Three spins for Enter
+// Listing 9.15 Three spins for Enter
 constexpr std::optional<std::vector<options>> parse_enter(const std::string& response)
 {
 	if (response.empty())
@@ -188,7 +189,7 @@ constexpr std::optional<std::vector<options>> parse_enter(const std::string& res
 	}
 }
 
-// Listing 9.14 Check for Enter pressed
+// Listing 9.16 Check for Enter pressed
 std::optional<std::vector<options>> get_enter()
 {
 	std::cout << "Enter to play\n";
@@ -204,7 +205,7 @@ std::optional<std::vector<options>> get_enter()
 	return got;
 }
 
-// Listing 9.15 Map a character to an action
+// Listing 9.17 Map a character to an action
 constexpr std::optional<options> map_input(char c)
 {
 	switch (c)
@@ -222,7 +223,7 @@ constexpr std::optional<options> map_input(char c)
 	return {};
 }
 
-// Listing 9.16 Check for holds, nudges or spins
+// Listing 9.18 Check for holds, nudges or spins
 constexpr std::optional<std::vector<options>> parse_input(const std::string & response)
 {
 	std::vector<options> choice;
@@ -241,7 +242,7 @@ constexpr std::optional<std::vector<options>> parse_input(const std::string & re
 	return choice.empty() ? std::vector<options>{Spin{}, Spin{}, Spin{}} : choice;
 }
 
-// Listing 9.17 Check for options
+// Listing 9.19 Check for options
 std::optional<std::vector<options>> get_input(size_t expected_length)
 {
 	std::cout << "Hold (h), spin(s), nudge(n) or Enter for spins\n";
@@ -258,7 +259,7 @@ std::optional<std::vector<options>> get_input(size_t expected_length)
 }
 
 
-// Listing 9.19 Bring operator() into scope in a class 
+// Listing 9.21 Bring operator() into scope in a class 
 // called Overload in the text
 template <typename T>
 struct Overload1 : T {
@@ -270,7 +271,7 @@ template<typename T>
 Overload1(T) -> Overload1<T>;
 
 
-// Listing 9.20 The Overload pattern
+// Listing 9.22 The Overload pattern
 template <typename... Ts>
 struct Overload : Ts... {
 	using Ts::operator()...;
@@ -280,7 +281,7 @@ struct Overload : Ts... {
 template<typename... Ts>
 Overload(Ts...) -> Overload<Ts...>;
 
-// Listing 9.22 Move the reels
+// Listing 9.24 Move the reels
 template<typename T>
 void move_reel(std::vector<int>& reel, options opt, T random_fn)
 {
@@ -293,7 +294,7 @@ void move_reel(std::vector<int>& reel, options opt, T random_fn)
 	std::visit(RollMethod, opt);
 }
 
-// Listing 9.23 An improved triangle number machine
+// Listing 9.25 An improved triangle number machine
 void triangle_machine()
 {
 	constexpr int numbers = 20;
