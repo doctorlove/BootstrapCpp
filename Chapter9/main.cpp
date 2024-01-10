@@ -38,7 +38,7 @@ void demo_further_properties()
 	std::ranges::transform(triangle_numbers,
 		std::back_inserter(odd_or_even),
 		[](int i) { return i % 2 ? '.' : '*'; });
-	std::ranges::copy(odd_or_even, std::ostream_iterator<char>(std::cout, ""));
+	std::ranges::copy(odd_or_even, std::ostream_iterator<char>(std::cout, " "));
 	std::cout << '\n';
 
 	std::map<int, size_t> last_digits;

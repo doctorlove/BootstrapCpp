@@ -46,7 +46,7 @@ void pennies_game()
         {
             break;
         }
-        int player_choice = input.value();
+        const int player_choice = input.value();
 
         ++turns;
         std::cout << "You pressed " << player_choice << ", I guessed " << prediction << '\n';
@@ -125,7 +125,7 @@ public:
         }
     }
     // Listing 8.9 Update choices for valid keys
-    void update(const state_t& key, const Choice turn_changed)
+    void update(const state_t& key, const Choice& turn_changed)
     {
         if (auto it = state_lookup.find(key); it != state_lookup.end())
         {
@@ -298,14 +298,14 @@ void mind_reader()
     std::cout << "and it can now read your mind.\n";
     while (true)
     {
-        int prediction = mr.get_prediction();
+        const int prediction = mr.get_prediction();
 
         auto input = read_number(std::cin);
         if (!input)
         {
             break;
         }
-        int player_choice = input.value();
+        const int player_choice = input.value();
 
         ++turns;
         std::cout << "You pressed " << player_choice 
