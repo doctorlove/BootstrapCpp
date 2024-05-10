@@ -12,7 +12,7 @@
 // In Visual Studio add /std:c++latest to 'properties | C++ | command line | additon options' to get the CTAD, ranges etc
 // Or at least C++17 for --std in g++ (CTAD has been around since C++17)
 
-//Listing 2.2 The next row of Pascal’s triangle using the previous row
+//Listing 2.2 The next row of Pascal's triangle using the previous row
 std::vector<int> get_next_row(const std::vector<int>& last_row)
 {
     std::vector ret{ 1 }; // CTAD - otherwise say std::vector<int>
@@ -29,7 +29,7 @@ std::vector<int> get_next_row(const std::vector<int>& last_row)
     return ret;
 }
 
-//Listing 2.3 Generating several rows of Pascal’s triangle
+//Listing 2.3 Generating several rows of Pascal's triangle
 auto generate_triangle_first_listing(int rows)
 {
     std::vector<int> data;
