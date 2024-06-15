@@ -129,7 +129,9 @@ void check_properties(const std::vector<std::vector<int>> & triangle)
         assert(row.front() == 1);
         assert(row.back() == 1);
         assert(row.size() == row_number++);
-
+        assert(std::ranges::fold_left(row, 0, std::plus<>())
+            == expected_total);
+        // If your compiler doesn't support ranges, use std::accumulate instead:
         assert(std::accumulate(row.begin(),
             row.end(),
             0)
